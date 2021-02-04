@@ -34,26 +34,26 @@ from traitlets import Set
 from traitlets import Unicode
 from traitlets.config import Application
 
-from .cache import AsyncMultipartMemcache
-from .cache import DummyAsyncCache
-from .cache import MockCache
-from .cache import pylibmc
-from .client import NBViewerAsyncHTTPClient as HTTPClientClass
-from .formats import default_formats
-from .handlers import init_handlers
-from .index import NoSearch
-from .log import log_request
-from .providers import default_providers
-from .providers import default_rewrites
-from .ratelimit import RateLimiter
-from .utils import git_info
-from .utils import jupyter_info
-from .utils import url_path_join
+from nbviewer.cache import AsyncMultipartMemcache
+from nbviewer.cache import DummyAsyncCache
+from nbviewer.cache import MockCache
+from nbviewer.cache import pylibmc
+from nbviewer.client import NBViewerAsyncHTTPClient as HTTPClientClass
+from nbviewer.formats import default_formats
+from nbviewer.handlers import init_handlers
+from nbviewer.index import NoSearch
+from nbviewer.log import log_request
+from nbviewer.providers import default_providers
+from nbviewer.providers import default_rewrites
+from nbviewer.ratelimit import RateLimiter
+from nbviewer.utils import git_info
+from nbviewer.utils import jupyter_info
+from nbviewer.utils import url_path_join
 
 try:  # Python 3.8
     from functools import cached_property
 except ImportError:
-    from .utils import cached_property
+    from nbviewer.utils import cached_property
 
 from jupyter_server.base.handlers import FileFindHandler as StaticFileHandler
 
@@ -83,7 +83,6 @@ def nrfoot():
 
 this_dir, this_filename = os.path.split(__file__)
 FRONTPAGE_JSON = os.path.join(this_dir, "frontpage.json")
-
 
 class NBViewer(Application):
 
@@ -215,6 +214,11 @@ class NBViewer(Application):
         help="Answer yes to any questions (e.g. confirm overwrite).",
     ).tag(config=True)
 
+    notebooks_handler = Unicode(
+        default_value="nbviewer.nduhandlers.NotebookUploadHandler",
+        help="The Tornado handler to allow upload and managing uploaded notebooks.",
+    ).tag(config=True)
+
     # base_url specified by the user
     base_url = Unicode(default_value="/", help="URL base for the server").tag(
         config=True
@@ -246,7 +250,7 @@ class NBViewer(Application):
     ).tag(config=True)
 
     content_security_policy = Unicode(
-        default_value="connect-src 'none';",
+        default_value="style-src 'self' 'unsafe-inline';",
         help="Content-Security-Policy header setting.",
     ).tag(config=True)
 
@@ -627,6 +631,7 @@ class NBViewer(Application):
             local_handler=self.local_handler,
             url_handler=self.url_handler,
             user_gists_handler=self.user_gists_handler,
+            notebooks_handler=self.notebooks_handler,
         )
         handler_kwargs = {
             "handler_names": handler_names,

@@ -21,3 +21,7 @@ MANIFEST
 package-lock.json
 .vscode/
 *.tgz
+venv
+.idea
+notebook-*
+localfile
