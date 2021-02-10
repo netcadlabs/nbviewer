@@ -1,13 +1,11 @@
-import traceback
-
-from nbviewer.nbmanager.database import Database
+from nbviewer.nbmanager.database_instance import DatabaseInstance
 from nbviewer.nbmanager.filemanager import FileManager
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 from nbviewer.nbmanager.runner import NotebookRunner
 from nbviewer.providers.base import BaseHandler
+from bs4 import BeautifulSoup
 
 tenantId = 'test-tenant-id'
-from bs4 import BeautifulSoup
 
 
 def get_argument_value(arguments: dict, name, default_value=''):
@@ -24,8 +22,7 @@ def get_argument_value(arguments: dict, name, default_value=''):
 
 
 def __get_notebook(tenant_id, code):
-    database = Database.get_instance()
-    notebook = database.get_notebooks(tenant_id, code)
+    notebook = DatabaseInstance.get().get_tenant_notebooks(tenant_id, code)
     return clean_data_for_ui(notebook)
 
 
@@ -45,7 +42,7 @@ class NotebookUploadHandler(BaseHandler):
 
     def render_index_template(self, notebooks, **other):
         return self.render_template(
-            "upload.html",
+            "notebooks.html",
             title=self.frontpage_setup.get("title", None),
             subtitle=self.frontpage_setup.get("subtitle", None),
             text=self.frontpage_setup.get("text", None),
@@ -57,7 +54,7 @@ class NotebookUploadHandler(BaseHandler):
     def get(self, *path_args, **path_kwargs):
         code = self.get_argument('code', None)
         action = self.get_argument('action', None)
-        database = Database.get_instance()
+        database = DatabaseInstance.get()
 
         if code is not None:
             result = {}
@@ -78,7 +75,7 @@ class NotebookUploadHandler(BaseHandler):
                 else:
                     # file_manager = FileManager.get_instance()
                     # file_manager.create_preview_of_notebook(tenantId, code)
-                    result = database.get_notebook(tenantId, code)
+                    result = database.get_notebook_by_code(tenantId, code)
             elif action == 'delete':
                 self.__delete_notebook(tenantId, code)
                 result = {'result': True}
@@ -101,13 +98,15 @@ class NotebookUploadHandler(BaseHandler):
                 file = self.request.files['file'][0]
 
                 file_manager = FileManager.get_instance()
-                database = Database.get_instance()
+                database = DatabaseInstance.get()
 
                 name = get_argument_value(self.request.body_arguments, 'name', '')
                 desc = get_argument_value(self.request.body_arguments, 'desc', '')
                 run = get_argument_value(self.request.body_arguments, 'run', 0)
                 cron = get_argument_value(self.request.body_arguments, 'cron', '')
                 timeout = get_argument_value(self.request.body_arguments, 'timeout', 5000)
+                if timeout is not None and timeout < 100:
+                    timeout = 100
 
                 result = file_manager.save_notebook_file(tenantId, file)
                 if result is not None:
@@ -134,7 +133,7 @@ class NotebookUploadHandler(BaseHandler):
         self.finish(rendered_template)
 
     def __delete_notebook(self, tenant_id, code):
-        database = Database.get_instance()
+        database = DatabaseInstance.get()
         database.delete_notebook(tenant_id, code)
         file_manager = FileManager.get_instance()
         file_manager.delete_notebook_file(tenant_id, code)
@@ -152,8 +151,8 @@ class NotebookUploadHandler(BaseHandler):
         #     print(e)
 
     def __get_notebooks(self, tenant_id):
-        database = Database.get_instance()
-        notebooks = database.get_notebooks(tenant_id)
+        database = DatabaseInstance.get()
+        notebooks = database.get_tenant_notebooks(tenant_id)
         for item in notebooks:
             item = clean_data_for_ui(item)
             item['preview_img'] = item['code'] + ".img"

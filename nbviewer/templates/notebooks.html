@@ -90,6 +90,10 @@
                         <label for="desc">Description</label>
                         <textarea class="form-control" id="desc" name="desc" rows="2" required></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="timeout">Run timeout (in millisecond)</label>
+                        <input type="number" min="100" max="600000" class="form-control" id="timeout" name="timeout" value="5000"></input>
+                    </div>
                     <div class="checkbox">
                         <label>
                             <input name="run" type="checkbox" value="1"> Run after upload

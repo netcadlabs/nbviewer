@@ -4,7 +4,7 @@ from subprocess import CalledProcessError, STDOUT
 from nbconvert import HTMLExporter
 import nbformat
 
-from nbviewer.nbmanager.database import Database, DATETIME_FORMAT
+from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORMAT
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 
 
@@ -43,12 +43,11 @@ class NotebookRunner:
         return (body, resources)
 
     def run_notebook(self, tenant_id, code):
-        database = Database.get_instance()
-        notebook = database.get_notebook(tenant_id, code)
+        notebook = DatabaseInstance.get().get_notebook_by_code(tenant_id, code)
 
         if run_with_cmd(notebook['path'], notebook['code'], 'html'):
             exe_date = datetime.now().strftime(DATETIME_FORMAT)
-            database.update_notebook(tenant_id, code, {'exe_date': exe_date})
+            DatabaseInstance.get().update_notebook(tenant_id, code, {'exe_date': exe_date})
             return True
 
         return False
