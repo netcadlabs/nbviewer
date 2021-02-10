@@ -36,7 +36,6 @@ class Database:
             Database.__instance = self
 
     def __get_tenant_files(self):
-
         pass
 
     def __create_connection(self, db_file):
@@ -51,12 +50,17 @@ class Database:
     def __convert_row_map(row):
         return {
             'id': row[0],
+            'tenant_id': row[1],
             'code': row[2],
             'name': row[3],
-            'path': row[4],
-            'c_date': row[5],
-            'exe_date': row[6],
-            'exe_count': row[7]
+            'file_name': row[4],
+            'path': row[5],
+            'c_date': row[6],
+            'exe_date': row[7],
+            'exe_count': row[8],
+            'cron': row[8],
+            'timeout': row[9],
+            'error': row[10]
         }
 
     def get_notebooks(self, tenant_id: str):
@@ -68,25 +72,28 @@ class Database:
 
         return result
 
-    def save_notebook(self, tenant_id: str, code: str, name: str, path: str):
+    def save_notebook(self, nb):
         cursor = self.conn.cursor()
 
         created_date = datetime.now().strftime(DATETIME_FORMAT)
-        cursor.execute("INSERT INTO notebook(tenant_id, code, name, path, c_date) VALUES ('%s','%s','%s','%s','%s')"
-                       % (tenant_id, code, name, path, created_date))
+        cursor.execute("INSERT INTO notebook(tenant_id, code, name, file_name, path, c_date, cron) "
+                       "VALUES (?, ?, ?, ?, ?, ?, ?)", (nb['tenant_id'], nb['code'], nb['name'], nb['file_name'], nb['path'], created_date, nb['cron']))
         self.conn.commit()
 
     def update_notebook(self, tenant_id: str, code: str, fields):
         cursor = self.conn.cursor()
 
-        set_query = ""
+        question_marks = ""
+        params = []
         for key in fields:
-            set_query = (key + " = " + fields[key] + ", ")
+            question_marks = question_marks + (key + ' = ?, ')
+            params.append(fields[key])
 
-        if len(set_query) > 0:
-            set_query = set_query[:-1]
+        if len(question_marks) > 0:
+            question_marks = question_marks[:-2]
 
-        cursor.execute("UPDATE notebook %s tenant_id = '%s' AND code = '%s'" % (set_query, tenant_id, code))
+        params.extend([tenant_id, code])
+        cursor.execute("UPDATE notebook SET %s WHERE tenant_id = ? AND code = ?" % question_marks, params)
         self.conn.commit()
 
     def delete_notebook(self, tenant_id: str, code: str):
@@ -96,8 +103,8 @@ class Database:
 
     def get_notebook(self, tenant_id: str, code: str):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM notebook where tenant_id = '%s' AND code = '%s'" % (tenant_id, code))
-        row = cursor.fetchone();
+        cursor.execute("SELECT * FROM notebook WHERE tenant_id = '%s' AND code = '%s'" % (tenant_id, code))
+        row = cursor.fetchone()
         if row is not None:
             return self.__convert_row_map(row)
         return None

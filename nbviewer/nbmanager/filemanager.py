@@ -1,7 +1,7 @@
 import os
-import string
 import uuid
 from os import path
+import imgkit
 
 UPLOAD_FOLDER = ""
 
@@ -31,14 +31,14 @@ class FileManager:
         if not os.path.isdir(path):
             os.mkdir(path)
 
-    def delete_notebook_file(self, tenant_id: str, code:str):
+    def delete_notebook_file(self, tenant_id: str, code: str):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
 
         file_path = tenant_folder + os.path.sep + code + ".ipynb"
         if os.path.isfile(file_path):
             os.remove(file_path)
 
-        o_file_path = tenant_folder + os.path.sep + code + ".ipynb"
+        o_file_path = tenant_folder + os.path.sep + code + ".html"
         if os.path.isfile(o_file_path):
             os.remove(o_file_path)
 
@@ -61,5 +61,45 @@ class FileManager:
             'result': True,
             'code': code,
             'file_name': original_file_name,
-            'file_path': file_path
+            'path': file_path
         }
+
+    def notebook_html_content(self,tenant_id, code):
+        file_path = self.notebook_html_file_path(tenant_id, code)
+
+        content = None
+        with open(file_path) as f:
+            content = f.read()
+
+        return content
+
+    def notebook_html_file_path(self,tenant_id, code):
+        tenant_folder = path.join(self.notebooks_folder, tenant_id)
+        file_path = tenant_folder + os.path.sep + code + '.html'
+
+        return file_path
+
+    def create_preview_of_notebook(self, tenant_id, code, source_ext="html", target_ext="jpg"):
+        tenant_folder = path.join(self.notebooks_folder, tenant_id)
+        file_path = tenant_folder + os.path.sep + code + '.' + source_ext
+        img_file_path = tenant_folder + os.path.sep + code + '.' + target_ext
+
+        try:
+            if os.path.isfile(file_path):
+                # from preview_generator.manager import PreviewManager
+                # cache_path = '/tmp/preview_cache'
+                # manager = PreviewManager(cache_path, create_folder=True)
+                # path_to_preview_image = manager.get_jpeg_preview(file_path, page=1)
+                #
+                # return path_to_preview_image
+
+                lines = None
+                with open('readme.txt') as f:
+                    lines = f.read()
+
+                if lines is not None:
+                    imgkit.from_string(lines, img_file_path)
+        except:
+            print('cant create preview')
+
+        return None

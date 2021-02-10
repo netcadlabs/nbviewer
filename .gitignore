@@ -24,4 +24,6 @@ package-lock.json
 venv
 .idea
 notebook-*
+notebooks
 localfile
+notebooks.db

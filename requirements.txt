@@ -10,3 +10,10 @@ pycurl
 pylibmc
 statsd
 tornado>=6.0
+ipykernel
+preview-generator
+python-magic-bin==0.4.14
+imgkit
+plotly
+plotly-express
+matplotlib

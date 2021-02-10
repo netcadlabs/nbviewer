@@ -240,6 +240,10 @@ class BaseHandler(web.RequestHandler):
         return self.settings["static_url_prefix"]
 
     @property
+    def localfile_url_prefix(self):
+        return "/localfile/"
+
+    @property
     def statsd(self):
         if hasattr(self, "_statsd"):
             return self._statsd
@@ -288,6 +292,8 @@ class BaseHandler(web.RequestHandler):
             "mathjax_url": self.mathjax_url,
             "static_url": self.static_url,
             "from_base": self.from_base,
+            "notebook_locale_url": self.notebook_locale_url,
+            "notebook_output_url": self.notebook_output_url,
             "google_analytics_id": self.settings.get("google_analytics_id"),
             "ipywidgets_base_url": self.ipywidgets_base_url,
             "jupyter_js_widgets_version": self.jupyter_js_widgets_version,
@@ -297,6 +303,12 @@ class BaseHandler(web.RequestHandler):
     # Overwrite the static_url method from Tornado to work better with our custom StaticFileHandler
     def static_url(self, url):
         return url_path_join(self.static_url_prefix, url)
+
+    def notebook_locale_url(self, notebook):
+        return url_path_join(self.localfile_url_prefix, notebook['tenant_id'], notebook['code'] + '.ipynb')
+
+    def notebook_output_url(self, notebook):
+        return url_path_join('/outputs', notebook['code'])
 
     def breadcrumbs(self, path, base_url):
         """Generate a list of breadcrumbs"""

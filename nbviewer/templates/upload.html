@@ -1,72 +1,152 @@
 {% extends "layout_ndu.html" %}
 
 {% block body %}
-{% if title or subtitle or text or show_input %}
-<header class="jumbotron masthead">
-    {% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}
-    {% if text %}
-    {{ text | markdown | safe }}
-    {% endif %}
-    {% if show_input %}
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <form enctype="multipart/form-data" method="post" action="{{ from_base('/notebooks/') }}">
-                <div class="input-group">
-                    <input type="file" name="file" accept=".ipynb">
-                    <span class="input-group-btn">
-              <button class="btn btn-default" type="submit">
-                Yükle
-              </button>
-            </span>
-                </div>
-            </form>
-        </div>
-    </div>
-    {% endif %}
-</header>
-{% endif %}
-
-
 <section>
-    <div class="marketing">
-        <ul class="thumbnails example-sites">
-            {% for notebook in notebooks %}
-            <li class="col-md-4" id="nb-{{notebook.code}}">
-                <p class="marketing-byline">{{notebook.name}}</p>
-                <a class="thumbnail nb-thumbnail" href="{{ from_base(notebook.path) }}" target="_blank">
-                    <img src="{{ static_url(notebook.preview_img) }}"/>
+    <div style="margin: 15px 0px;">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
+            Upload New Notebook
+        </button>
+    </div>
+</section>
+<section>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">File Name</th>
+            <th scope="col">Preview</th>
+            <th scope="col">Description</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last Run</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for notebook in notebooks %}
+        <tr id="nb-{{notebook.code}}">
+            <th scope="row">{{notebook.id}}</th>
+            <td>{{notebook.name}}</td>
+            <td>
+                <i class="fa fa-book"></i>
+                <a target="_blank" href="{{ notebook_locale_url(notebook) }}">{{notebook.file_name}}</a>
+            </td>
+            <td>
+                {% if notebook.exe_date %}
+                <a class="thumbnail nb-thumbnail-table" href="{{ notebook_output_url(notebook) }}?hide-inputs=True"
+                   target="_blank">
+                    <!--<img src="{{ static_url(notebook.preview_img) }}"/>-->
                 </a>
+                {% endif %}
+
+            </td>
+            <td>{{notebook.desc}}</td>
+            <td>
+                {% if notebook.error %}
+                <button class="btn btn-sm btn-danger" onclick="showErrorDetailModal(this)"
+                        data-error="{{notebook.error}}"> Error
+                </button>
+                {% else %}
+                {% if notebook.exe_date %}
+                <button class="btn btn-sm btn-success danger">OK</button>
+                {% endif %}
+                {% endif %}
+            </td>
+            <td>
+                {% if notebook.exe_date %}
+                {{notebook.exe_date}}
+                {% endif %}
+            </td>
+            <td>
                 <div class="nb-controls">
                     <button class="btn btn-primary" onclick="runNb('{{notebook.code}}')">Run</button>
                     <button class="btn btn-info">Edit</button>
                     <button class="btn btn-danger nb-delete" onclick="deleteNb('{{notebook.code}}')">Delete</button>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+            </td>
+        </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
 </section>
+<div class="modal" tabindex="-1" role="dialog" id="uploadModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload New Notebook</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="nb-form" class="upload-form" enctype="multipart/form-data" method="post"
+                      action="{{ from_base('/notebooks/') }}">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="desc">Description</label>
+                        <textarea class="form-control" id="desc" name="desc" rows="2" required></textarea>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input name="run" type="checkbox" value="1"> Run after upload
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" id="file" type="file" name="file" accept=".ipynb" required>
+                        <span class="input-group-btn">
+                    </span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('nb-form').submit();">
+                    Upload
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-<!--  {% for section in sections %}-->
-<!--    <section>-->
-<!--      <h3 class="section-heading">{{section.header}}</h3>-->
-<!--      <div class="marketing">-->
-<!--        <ul class="thumbnails example-sites">-->
-<!--          {% for link in section.links %}-->
-<!--            <li class="col-md-4">-->
-<!--              <p class="marketing-byline">{{link.text}}</p>-->
-<!--              <a class="thumbnail" href="{{ from_base(link.target) }}" target="_blank">-->
-<!--                <img src="{{ static_url(link.img) }}" />-->
-<!--              </a>-->
-<!--            </li>-->
-<!--          {% endfor %}-->
-<!--        </ul>-->
-<!--      </div>-->
-<!--    </section>-->
-<!--  {% endfor %}-->
+<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+                <pre id="error-details"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+$(document).ready(function(){
+    $('#nb-form #file').change(function(e){
+        var fileName = e.target.files[0].name;
+        fileName = fileName.slice(0, fileName.lastIndexOf('.'));
+        if(!$('#name').val() || !$('#name').val().trim()){
+            $('#name').val(fileName)
+        }
+    });
+});
+
+function showErrorDetailModal(e){
+    var detail = $(e).attr('data-error');
+    $('#error-details').text(detail);
+    $('#errorDetailModal').modal()
+}
+
 function deleteNb(code){
     var question = confirm('Are you sure to delete this notebook?');
     if(question) {
@@ -97,6 +177,30 @@ function runNb(code){
           });
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 {% endblock body %}

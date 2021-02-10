@@ -214,9 +214,14 @@ class NBViewer(Application):
         help="Answer yes to any questions (e.g. confirm overwrite).",
     ).tag(config=True)
 
-    notebooks_handler = Unicode(
+    notebooks_upload_handler = Unicode(
         default_value="nbviewer.nduhandlers.NotebookUploadHandler",
         help="The Tornado handler to allow upload and managing uploaded notebooks.",
+    ).tag(config=True)
+
+    notebooks_output_handler = Unicode(
+        default_value="nbviewer.nduhandlers.NotebookHtmlOutputHandler",
+        help="The Tornado handler to show output of notebooks.",
     ).tag(config=True)
 
     # base_url specified by the user
@@ -631,7 +636,8 @@ class NBViewer(Application):
             local_handler=self.local_handler,
             url_handler=self.url_handler,
             user_gists_handler=self.user_gists_handler,
-            notebooks_handler=self.notebooks_handler,
+            notebooks_upload_handler=self.notebooks_upload_handler,
+            notebooks_output_handler=self.notebooks_output_handler,
         )
         handler_kwargs = {
             "handler_names": handler_names,
