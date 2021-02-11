@@ -68,8 +68,11 @@ class FileManager:
         file_path = self.notebook_html_file_path(tenant_id, code)
 
         content = None
-        with open(file_path) as f:
-            content = f.read()
+        if os.path.isfile(file_path):
+            with open(file_path) as f:
+                content = f.read()
+        else:
+            raise FileNotFoundError('Output file not found!')
 
         return content
 

@@ -1,4 +1,6 @@
-from nbviewer.nbmanager.database_instance import DatabaseInstance
+from datetime import datetime
+
+from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORMAT
 from nbviewer.nbmanager.filemanager import FileManager
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 from nbviewer.nbmanager.runner import NotebookRunner
@@ -11,14 +13,32 @@ tenantId = 'test-tenant-id'
 def get_argument_value(arguments: dict, name, default_value=''):
     if arguments and arguments.get(name, None) is not None:
         values = arguments.get(name)
+        value = None
         if len(values) > 0:
             value = values[0]
             if isinstance(value, bytes):
-                return value.decode("utf-8")
-            else:
-                return value
+                value = value.decode("utf-8")
+
+        if value is not None:
+            if default_value is not None and isinstance(default_value, int):
+                value = int(value)
+            return value
 
     return default_value
+
+
+# def get_cron_tab(arguments: dict):
+#     result = None
+#     interval_type = get_argument_value(arguments, 'interval_type', 'every')
+#
+#     if interval_type == 'every':
+#         every_type = get_argument_value(arguments, 'every_type', None)
+#         every_interval = get_argument_value(arguments, 'every_interval', None)
+#     elif interval_type == 'each':
+#         each_type = get_argument_value(arguments, 'each_type', None)
+#         each_time = get_argument_value(arguments, 'each_time', None)
+#
+#     return result
 
 
 def __get_notebook(tenant_id, code):
@@ -61,6 +81,7 @@ class NotebookUploadHandler(BaseHandler):
             if action == 'run':
                 runner = NotebookRunner()
                 error = None
+                exe_date = datetime.now().strftime(DATETIME_FORMAT)
                 try:
                     runner.run_notebook(tenantId, code)
                 except NotebookRunError as nre:
@@ -71,10 +92,11 @@ class NotebookUploadHandler(BaseHandler):
 
                 if error:
                     result = {'result': False, 'error': error}
-                    database.update_notebook(tenantId, code, {'error': error})
+                    database.update_notebook(tenantId, code, {'error': error, 'exe_date': exe_date})
                 else:
                     # file_manager = FileManager.get_instance()
                     # file_manager.create_preview_of_notebook(tenantId, code)
+                    database.update_notebook(tenantId, code, {'error': None, 'exe_date': exe_date})
                     result = database.get_notebook_by_code(tenantId, code)
             elif action == 'delete':
                 self.__delete_notebook(tenantId, code)
@@ -103,8 +125,9 @@ class NotebookUploadHandler(BaseHandler):
                 name = get_argument_value(self.request.body_arguments, 'name', '')
                 desc = get_argument_value(self.request.body_arguments, 'desc', '')
                 run = get_argument_value(self.request.body_arguments, 'run', 0)
-                cron = get_argument_value(self.request.body_arguments, 'cron', '')
+                cron = get_argument_value(self.request.body_arguments, 'cron', None)
                 timeout = get_argument_value(self.request.body_arguments, 'timeout', 5000)
+
                 if timeout is not None and timeout < 100:
                     timeout = 100
 
@@ -122,7 +145,7 @@ class NotebookUploadHandler(BaseHandler):
                     }
                     database.save_notebook(notebook)
 
-                if str(run) == str('1'):
+                if run == 1:
                     runner = NotebookRunner.run_notebook_thread()
 
         except Exception as e:
@@ -176,17 +199,21 @@ class NotebookHtmlOutputHandler(BaseHandler):
             self.finish('')
             return
 
-        hide_inputs = self.get_argument('hide-inputs', False)
+        hide_inputs = self.get_argument('hide-inputs', True)
 
-        file_manager = FileManager.get_instance()
-        content = file_manager.notebook_html_content(tenantId, code)
+        try:
+            file_manager = FileManager.get_instance()
+            content = file_manager.notebook_html_content(tenantId, code)
 
-        if hide_inputs:
-            soup = BeautifulSoup(content)
-            for cls in HIDDEN_OUTPUT_CLASSES:
-                removals = soup.find_all('div', {'class': cls})
-                for match in removals:
-                    match.decompose()
-            content = str(soup)
+            if hide_inputs:
+                soup = BeautifulSoup(content)
+                for cls in HIDDEN_OUTPUT_CLASSES:
+                    removals = soup.find_all('div', {'class': cls})
+                    for match in removals:
+                        match.decompose()
+                content = str(soup)
 
-        self.finish(content)
+            self.finish(content)
+        except FileNotFoundError as fne:
+            self.set_status(404)
+            self.finish(self.render_template("output_not_found.html", message=str(fne)))

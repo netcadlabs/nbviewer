@@ -41,27 +41,44 @@
 
             </td>
             <td>{{notebook.desc}}</td>
-            <td>
+            <td class="nb-status-col">
                 {% if notebook.error %}
                 <button class="btn btn-sm btn-danger" onclick="showErrorDetailModal(this)"
-                        data-error="{{notebook.error}}"> Error
+                        data-error="{{notebook.error}}">
+                    <i class="fa fa-exclamation-circle"></i>
                 </button>
                 {% else %}
                 {% if notebook.exe_date %}
-                <button class="btn btn-sm btn-success danger">OK</button>
+                <button class="btn btn-sm btn-success danger" onclick="showRunDetailModal(this)"
+                >
+                    <i class="fa fa-check-circle"></i>
+                </button>
                 {% endif %}
                 {% endif %}
             </td>
-            <td>
+            <td class="nb-exe-date-col">
                 {% if notebook.exe_date %}
                 {{notebook.exe_date}}
                 {% endif %}
             </td>
-            <td>
+            <td class="nb-controls-col">
                 <div class="nb-controls">
-                    <button class="btn btn-primary" onclick="runNb('{{notebook.code}}')">Run</button>
-                    <button class="btn btn-info">Edit</button>
-                    <button class="btn btn-danger nb-delete" onclick="deleteNb('{{notebook.code}}')">Delete</button>
+                    <button class="btn btn-success" onclick="runNb('{{notebook.code}}')">
+                        <i class="fa fa-play"></i>
+                    </button>
+                    <button class="btn btn-info">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger nb-delete" onclick="deleteNb('{{notebook.code}}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <button class="btn btn-primary"
+                            onclick="copyTextToClipboard(this, '{{notebook_output_url_for_copy(notebook)}}')"
+                            data-container="body"
+                            data-toggle="popover" data-placement="top"
+                            data-content="Notebook latest output url copied to clipboard.">
+                        <i class="fa fa-copy"></i>
+                    </button>
                 </div>
             </td>
         </tr>
@@ -91,8 +108,59 @@
                         <textarea class="form-control" id="desc" name="desc" rows="2" required></textarea>
                     </div>
                     <div class="form-group">
+                        <label for="cron">Run Crontab
+                            <span class="label-help">
+                            (<a target="_blank" href="https://crontab.guru">help about crontabs</a>)
+                            </span>
+                        </label>
+                        <input type="text" class="form-control" id="cron" name="cron" style="font-weight: bold;"
+                               placeholder="*/15 * * * * (at every 15th minute.)"></input>
+                    </div>
+                    <!--<div class="form-row">
+                        <div class="form-group col-md-4 col-np">
+                            <label for="interval_type">Interval Type</label>
+                            <select id="interval_type" name="interval_type" class="form-control"
+                                    onchange="changeIntervalType(this)">
+                                <option value="every" selected>Every</option>
+                                <option value="each">Each</option>
+                            </select>
+                        </div>
+                        <div id="interval-every">
+                            <div class="form-group col-md-4 col-np">
+                                <label for="every_interval">Run Interval</label>
+                                <input type="number" class="form-control" id="every_interval" name="every_interval"
+                                       value="1"/>
+                            </div>
+                            <div class="form-group col-md-4 col-np">
+                                <label for="every_type">Type</label>
+                                <select id="every_type" name="every_type" class="form-control">
+                                    <option value="minute">Minute</option>
+                                    <option value="hour" selected>Hour</option>
+                                    <option value="day">Day</option>
+                                    <option value="week">Week</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="interval-each" style="display:none;">
+                            <div class="form-group col-md-4 col-np">
+                                <label for="each_type">Type</label>
+                                <select id="each_type" name="each_type" class="form-control">
+                                    <option value="minute">Minute</option>
+                                    <option value="hour" selected>Hour of Day</option>
+                                    <option value="minute" selected>Time in Hour</option>
+                                    <option value="day">Day of month</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4 col-np">
+                                <label for="each_time">Time</label>
+                                <input class="form-control" type="time" name="each_time" id="each_time">
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="form-group">
                         <label for="timeout">Run timeout (in millisecond)</label>
-                        <input type="number" min="100" max="600000" class="form-control" id="timeout" name="timeout" value="5000"></input>
+                        <input type="number" min="100" max="600000" class="form-control" id="timeout" name="timeout"
+                               value="5000"></input>
                     </div>
                     <div class="checkbox">
                         <label>
@@ -122,7 +190,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                <h4 class="modal-title" id="myModalLabel">Error Details</h4>
             </div>
             <div class="modal-body">
                 <pre id="error-details"></pre>
@@ -134,78 +202,25 @@
     </div>
 </div>
 
-<script>
-$(document).ready(function(){
-    $('#nb-form #file').change(function(e){
-        var fileName = e.target.files[0].name;
-        fileName = fileName.slice(0, fileName.lastIndexOf('.'));
-        if(!$('#name').val() || !$('#name').val().trim()){
-            $('#name').val(fileName)
-        }
-    });
-});
+<div class="modal fade" id="runDetailModal" tabindex="-1" role="dialog" aria-labelledby="runModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="runModalLabel">Notebook Run Details</h4>
+            </div>
+            <div class="modal-body">
+                <h3>TODO - show run details</h3>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-function showErrorDetailModal(e){
-    var detail = $(e).attr('data-error');
-    $('#error-details').text(detail);
-    $('#errorDetailModal').modal()
-}
-
-function deleteNb(code){
-    var question = confirm('Are you sure to delete this notebook?');
-    if(question) {
-        $.ajax({
-            url: '/notebooks/?code=' + code+ '&action=delete',
-            type: 'GET'
-        }).done(function() {
-            console.log( "delete success" );
-            $("#nb-" + code).remove();
-          })
-          .fail(function() {
-            console.error( "delete failed" );
-          });
-    }
-}
-
-function runNb(code){
-    var question = confirm('Are you sure to run this notebook?');
-    if(question) {
-        $.ajax({
-            url: '/notebooks/?code=' + code+ '&action=run',
-            type: 'GET'
-        }).done(function() {
-            console.log( "run success" );
-          })
-          .fail(function() {
-            console.error( "run failed" );
-          });
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</script>
+<script src="{{ static_url('js/notebooks.js') }}"></script>
 
 {% endblock body %}
 

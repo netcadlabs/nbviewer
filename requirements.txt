@@ -17,3 +17,4 @@ imgkit
 plotly
 plotly-express
 matplotlib
+seaborn

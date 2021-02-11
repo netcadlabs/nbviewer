@@ -294,6 +294,7 @@ class BaseHandler(web.RequestHandler):
             "from_base": self.from_base,
             "notebook_locale_url": self.notebook_locale_url,
             "notebook_output_url": self.notebook_output_url,
+            "notebook_output_url_for_copy": self.notebook_output_url_for_copy,
             "google_analytics_id": self.settings.get("google_analytics_id"),
             "ipywidgets_base_url": self.ipywidgets_base_url,
             "jupyter_js_widgets_version": self.jupyter_js_widgets_version,
@@ -309,6 +310,9 @@ class BaseHandler(web.RequestHandler):
 
     def notebook_output_url(self, notebook):
         return url_path_join('/outputs', notebook['code'])
+
+    def notebook_output_url_for_copy(self, notebook):
+        return url_path_join(self.base_url, '/outputs', notebook['code'])
 
     def breadcrumbs(self, path, base_url):
         """Generate a list of breadcrumbs"""

@@ -46,8 +46,6 @@ class NotebookRunner:
         notebook = DatabaseInstance.get().get_notebook_by_code(tenant_id, code)
 
         if run_with_cmd(notebook['path'], notebook['code'], 'html'):
-            exe_date = datetime.now().strftime(DATETIME_FORMAT)
-            DatabaseInstance.get().update_notebook(tenant_id, code, {'exe_date': exe_date})
             return True
 
         return False
