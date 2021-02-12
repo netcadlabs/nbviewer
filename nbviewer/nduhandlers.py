@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORMAT
@@ -187,16 +188,31 @@ NOT_ALLOWED_OUTPUT_SOURCES = ['style.min.css.map', 'custom.css']
 
 HIDDEN_OUTPUT_CLASSES = ['prompt', 'input_prompt', 'output_prompt', 'input']
 
+def is_valid_uuid(val):
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
 class NotebookHtmlOutputHandler(BaseHandler):
 
     def get(self, *path_args, **path_kwargs):
-        code = self.request.uri.split('/').pop()
+        uri_parts = self.request.uri.split('/')
+
+        code = None
+        if len(uri_parts) > 2:
+            code = uri_parts[2]
+
         if '?' in code:
             code = code.split('?')[0]
 
-        if code in NOT_ALLOWED_OUTPUT_SOURCES:
-            self.finish('')
+        # if code in NOT_ALLOWED_OUTPUT_SOURCES:
+        #     self.finish('')
+        #     return
+
+        if not is_valid_uuid(code):
+            self.finish('Not valid output code')
             return
 
         hide_inputs = self.get_argument('hide-inputs', True)
