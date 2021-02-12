@@ -127,10 +127,10 @@ class NotebookUploadHandler(BaseHandler):
                 desc = get_argument_value(self.request.body_arguments, 'desc', '')
                 run = get_argument_value(self.request.body_arguments, 'run', 0)
                 cron = get_argument_value(self.request.body_arguments, 'cron', None)
-                timeout = get_argument_value(self.request.body_arguments, 'timeout', 5000)
+                timeout = get_argument_value(self.request.body_arguments, 'timeout', 0)
 
-                if timeout is not None and timeout < 100:
-                    timeout = 100
+                if timeout is not None and timeout > 300:
+                    timeout = 60
 
                 result = file_manager.save_notebook_file(tenantId, file)
                 if result is not None:
@@ -161,12 +161,9 @@ class NotebookUploadHandler(BaseHandler):
         database.delete_notebook(tenant_id, code)
         file_manager = FileManager.get_instance()
         file_manager.delete_notebook_file(tenant_id, code)
-
         return False
-
         # try:
         #     (body, resources) = runner.run(notebook['path'])
-        #
         #     output_name = code + ".html"
         #     f = open(output_name, "a")
         #     f.write(body)
@@ -188,12 +185,14 @@ NOT_ALLOWED_OUTPUT_SOURCES = ['style.min.css.map', 'custom.css']
 
 HIDDEN_OUTPUT_CLASSES = ['prompt', 'input_prompt', 'output_prompt', 'input']
 
+
 def is_valid_uuid(val):
     try:
         uuid.UUID(str(val))
         return True
     except ValueError:
         return False
+
 
 class NotebookHtmlOutputHandler(BaseHandler):
 
