@@ -1,6 +1,6 @@
 from datetime import datetime
 from subprocess import CalledProcessError, STDOUT
-
+import subprocess
 from nbconvert import HTMLExporter
 import nbformat
 
@@ -10,33 +10,8 @@ from nbviewer.nbmanager.nb_run_error import NotebookRunError
 CALL_EXECUTION_TIMEOUT_ERROR_PATTERN = "Cell execution timed out"
 
 
-def run_with_cmd(notebook_file_path, output: str = 'output', format: str = 'html', timeout: int = None):
-    import subprocess
-
-    output_name = str(output) + '.' + str(format)
-    try:
-        result = ''
-        command_args = ['jupyter', 'nbconvert', '--execute', notebook_file_path, '--output', output_name]
-
-        if timeout is not None and timeout != 0 and isinstance(timeout, int):
-            command_args.append("--ExecutePreprocessor.timeout={}".format(timeout))
-
-        if format == 'html':
-            command_args.extend(['--to', 'html'])
-            result = subprocess.check_output(command_args, stderr=STDOUT)
-        else:
-            return False
-    except CalledProcessError as err:
-        if err.output:
-            error_detail = str(err.output.decode('UTF-8'))
-            if CALL_EXECUTION_TIMEOUT_ERROR_PATTERN in error_detail:
-                error_detail = CALL_EXECUTION_TIMEOUT_ERROR_PATTERN
-            raise NotebookRunError(error_detail)
-        else:
-            raise NotebookRunError('Can not run notebook!')
-
-    return True
-
+# async def run_with_cmd(notebook_file_path, output: str = 'output', format: str = 'html', timeout: int = None):
+#
 
 class NotebookRunner:
 
@@ -52,13 +27,37 @@ class NotebookRunner:
 
         return (body, resources)
 
-    def run_notebook(self, tenant_id, code):
+    async def run_notebook(self, tenant_id, code):
         notebook = DatabaseInstance.get().get_notebook_by_code(tenant_id, code)
 
-        if run_with_cmd(notebook['path'], output=notebook['code'], format='html', timeout=notebook['timeout']):
-            return True
+        timeout = notebook['timeout']
+        output = notebook['code']
+        notebook_file_path = notebook['path']
+        format = 'html'
 
-        return False
+        output_name = str(output) + '.' + str(format)
+        try:
+            result = ''
+            command_args = ['jupyter', 'nbconvert', '--execute', notebook_file_path, '--output', output_name]
+
+            if timeout is not None and timeout != 0 and isinstance(timeout, int):
+                command_args.append("--ExecutePreprocessor.timeout={}".format(timeout))
+
+            if format == 'html':
+                command_args.extend(['--to', 'html'])
+                result = subprocess.check_output(command_args, stderr=STDOUT)
+            else:
+                return False
+        except CalledProcessError as err:
+            if err.output:
+                error_detail = str(err.output.decode('UTF-8'))
+                if CALL_EXECUTION_TIMEOUT_ERROR_PATTERN in error_detail:
+                    error_detail = CALL_EXECUTION_TIMEOUT_ERROR_PATTERN
+                raise NotebookRunError(error_detail)
+            else:
+                raise NotebookRunError('Can not run notebook!')
+
+        return True
 
     @staticmethod
     def run_notebook_thread(self, notebook):

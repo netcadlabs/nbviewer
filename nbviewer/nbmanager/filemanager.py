@@ -1,35 +1,54 @@
 import os
 import uuid
 from os import path
-import imgkit
 
-UPLOAD_FOLDER = ""
+try:  # Python 3.8
+    from functools import cached_property
+except ImportError:
+    from nbviewer.utils import cached_property
 
+
+# import imgkit
+
+def check_folder(folder: str):
+    try:
+        if not os.path.isdir(folder):
+            os.makedirs(folder, exist_ok=True)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+DEFAULT_FOLDER = '/var/nbviewer/data'
 
 class FileManager:
     __instance = None
 
     @staticmethod
-    def get_instance() -> 'FileManager':
+    def get_instance(log: any = None) -> 'FileManager':
         """ Static access method. """
         if FileManager.__instance is None:
-            FileManager()
+            FileManager(log)
         return FileManager.__instance
 
-    def __init__(self):
-        self.upload_folder = path.dirname(path.dirname(path.abspath(__file__)))
-        self.notebooks_folder = path.join(self.upload_folder, 'notebooks')
+    @cached_property
+    def get_data_folder(self):
+        NB_DATA_FOLDER = os.getenv('NB_DATA_FOLDER', DEFAULT_FOLDER)
+        if not check_folder(NB_DATA_FOLDER):
+            NB_DATA_FOLDER = DEFAULT_FOLDER
+            check_folder(NB_DATA_FOLDER)
 
-        self.__check_folder(self.notebooks_folder)
+        return NB_DATA_FOLDER
+
+    def __init__(self, log):
+        self.log = log
+        data_folder = self.get_data_folder
+        self.notebooks_folder = path.join(data_folder, 'notebooks')
 
         if FileManager.__instance is not None:
             raise Exception("This class is a singleton!")
         else:
             FileManager.__instance = self
-
-    def __check_folder(self, path):
-        if not os.path.isdir(path):
-            os.mkdir(path)
 
     def delete_notebook_file(self, tenant_id: str, code: str):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
@@ -44,7 +63,7 @@ class FileManager:
 
     def save_notebook_file(self, tenant_id: str, file):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
-        self.__check_folder(tenant_folder)
+        check_folder(tenant_folder)
 
         original_file_name = file['filename']
         extension = os.path.splitext(original_file_name)[1]
@@ -64,7 +83,7 @@ class FileManager:
             'path': file_path
         }
 
-    def notebook_html_content(self,tenant_id, code):
+    def notebook_html_content(self, tenant_id, code):
         file_path = self.notebook_html_file_path(tenant_id, code)
 
         content = None
@@ -76,7 +95,7 @@ class FileManager:
 
         return content
 
-    def notebook_html_file_path(self,tenant_id, code):
+    def notebook_html_file_path(self, tenant_id, code):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
         file_path = tenant_folder + os.path.sep + code + '.html'
 
@@ -97,11 +116,11 @@ class FileManager:
                 # return path_to_preview_image
 
                 lines = None
-                with open('readme.txt') as f:
+                with open(file_path) as f:
                     lines = f.read()
 
-                if lines is not None:
-                    imgkit.from_string(lines, img_file_path)
+                # if lines is not None:
+                #     imgkit.from_string(lines, img_file_path)
         except:
             print('cant create preview')
 

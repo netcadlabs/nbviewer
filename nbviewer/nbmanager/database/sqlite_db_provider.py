@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from os import path
+import logging
 
 from nbviewer.nbmanager.api.database_provider import DatabaseProvider
 
@@ -8,11 +9,12 @@ DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 
 class SQLiteDbProvider(DatabaseProvider):
-    def __init__(self, config: dict = {}):
-
+    def __init__(self, config: dict = {}, log: any = None):
+        super().__init__(log)
         self.DATABASE_FOLDER = config.get('folder', path.dirname(path.dirname(path.abspath(__file__))))
         self.DB_FILE_NAME = config.get('file', 'notebooks.db')
-
+        self.log.info('DATABASE_FOLDER = %s' % self.DATABASE_FOLDER)
+        self.log.info('DB_FILE_NAME = %s' % self.DB_FILE_NAME)
         self.conn: sqlite3.Connection = None
         self.__create_connection(path.join(self.DATABASE_FOLDER, self.DB_FILE_NAME))
 
@@ -37,7 +39,8 @@ class SQLiteDbProvider(DatabaseProvider):
             self.conn = sqlite3.connect(db_file)
             print(sqlite3.version)
         except sqlite3.Error as e:
-            print(e)
+            self.log.error("Failed to initialize sql lite connection : %s", e)
+            # print(e)
 
     def save_notebook(self, nb):
         cursor = self.conn.cursor()

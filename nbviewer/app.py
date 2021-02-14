@@ -777,6 +777,13 @@ class NBViewer(Application):
             f.write(config_text)
         self.exit("Wrote default config file.")
 
+    def init_data_instances(self):
+        from nbviewer.nbmanager.filemanager import FileManager
+        file_manager = FileManager.get_instance(self.log)
+
+        from nbviewer.nbmanager.database_instance import DatabaseInstance
+        database_manager = DatabaseInstance.get(self.log)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -789,6 +796,7 @@ class NBViewer(Application):
         # Inherited method from traitlets.config.Application
         self.load_config_file(self.config_file)
         self.init_logging()
+        self.init_data_instances()
         self.init_tornado_application()
 
 

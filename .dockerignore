@@ -14,3 +14,8 @@ nbviewer/static/build/
 nbviewer/static/components/
 node_modules/
 notebook-*/
+Dockerfile
+venv/
+*.tgz
+*.tar.gz
+.idea

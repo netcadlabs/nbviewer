@@ -32,3 +32,12 @@ brew install wkhtmltopdf
 ------
 No module named ipykernel_launcher
 ipykernel_launcher
+
+
+# DOCKER 
+ docker build -t netcadlabs/nbviewer .
+ 
+ docker run --rm -p 5000:5000 netcadlabs/nbviewer
+ 
+ docker run -v ./data/:/srv/nbviewer/data/ -p 5000:5000 netcadlabs/nbviewer
+ 

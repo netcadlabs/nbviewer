@@ -28,27 +28,13 @@ def get_argument_value(arguments: dict, name, default_value=''):
     return default_value
 
 
-# def get_cron_tab(arguments: dict):
-#     result = None
-#     interval_type = get_argument_value(arguments, 'interval_type', 'every')
-#
-#     if interval_type == 'every':
-#         every_type = get_argument_value(arguments, 'every_type', None)
-#         every_interval = get_argument_value(arguments, 'every_interval', None)
-#     elif interval_type == 'each':
-#         each_type = get_argument_value(arguments, 'each_type', None)
-#         each_time = get_argument_value(arguments, 'each_time', None)
-#
-#     return result
-
-
 def __get_notebook(tenant_id, code):
     notebook = DatabaseInstance.get().get_tenant_notebooks(tenant_id, code)
     return clean_data_for_ui(notebook)
 
 
 def clean_data_for_ui(item: dict):
-    remove_keys = ['path', 'cron']
+    remove_keys = ['path']
     for key in remove_keys:
         if key in item:
             item.pop(key)
@@ -72,11 +58,10 @@ class NotebookUploadHandler(BaseHandler):
             **other
         )
 
-    def get(self, *path_args, **path_kwargs):
-        code = self.get_argument('code', None)
-        action = self.get_argument('action', None)
+    async def __run_command(self, code: str, action: str):
         database = DatabaseInstance.get()
 
+        result = None
         if code is not None:
             result = {}
             if action == 'run':
@@ -84,7 +69,7 @@ class NotebookUploadHandler(BaseHandler):
                 error = None
                 exe_date = datetime.now().strftime(DATETIME_FORMAT)
                 try:
-                    runner.run_notebook(tenantId, code)
+                    await runner.run_notebook(tenantId, code)
                 except NotebookRunError as nre:
                     error = nre.args[0]
                     print(nre)
@@ -98,16 +83,25 @@ class NotebookUploadHandler(BaseHandler):
                     # file_manager = FileManager.get_instance()
                     # file_manager.create_preview_of_notebook(tenantId, code)
                     database.update_notebook(tenantId, code, {'error': None, 'exe_date': exe_date})
-                    result = database.get_notebook_by_code(tenantId, code)
+                    result = clean_data_for_ui(database.get_notebook_by_code(tenantId, code))
             elif action == 'delete':
                 self.__delete_notebook(tenantId, code)
                 result = {'result': True}
+        else:
+            result = {'result': False, 'error': 'Unknown action'}
 
+        return result
+
+    async def get(self, *path_args, **path_kwargs):
+        code = self.get_argument('code', 'get')
+        action = self.get_argument('action', None)
+
+        if code != 'get':
+            result = await self.__run_command(code, action)
             self.finish(result)
-            return
-
-        rendered_template = self.render_index_template(self.__get_notebooks(tenantId))
-        self.finish(rendered_template)
+        else:
+            rendered_template = self.render_index_template(self.__get_notebooks(tenantId))
+            self.finish(rendered_template)
 
     def delete(self, code):
         args = self.request.query_arguments

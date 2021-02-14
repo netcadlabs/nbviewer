@@ -7,9 +7,11 @@ RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
     ca-certificates \
     libcurl4-gnutls-dev \
-    git \
-    nodejs \
-    npm
+    git
+
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash
+RUN apt install nodejs
+RUN node --version && npm --version
 
 # Python requirements
 COPY ./requirements-dev.txt /srv/nbviewer/
@@ -25,7 +27,7 @@ RUN python3 setup.py build && \
 
 # Now define the runtime image
 FROM python:3.7-slim-buster
-LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
+LABEL maintainer="Netcad Innovation Labs <netcadinnovationlabs@gmail.com>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -41,12 +43,18 @@ RUN apt-get update \
 COPY --from=builder /wheels /wheels
 RUN python3 -mpip install --no-cache /wheels/*
 
+ENV NB_DATA_FOLDER /srv/nbviewer/data
+
 # To change the number of threads use
 # docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
 ENV NBVIEWER_THREADS 2
 WORKDIR /srv/nbviewer
 EXPOSE 8080
-USER nobody
+#USER nobody
+
+# Switches to a non-root user and changes the ownership of the /app folder"
+RUN useradd appuser && chown -R appuser /srv/nbviewer
+USER appuser
 
 EXPOSE 9000
-CMD ["python", "-m", "nbviewer", "--port=8080"]
+CMD ["python", "-m", "nbviewer", "--port=5000"]

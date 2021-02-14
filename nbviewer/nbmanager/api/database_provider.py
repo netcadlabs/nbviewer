@@ -3,6 +3,9 @@ from abc import ABC, abstractmethod
 
 class DatabaseProvider(ABC):
 
+    def __init__(self, log):
+        self.log = log
+
     @abstractmethod
     def save_notebook(self, nb):
         pass
