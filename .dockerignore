@@ -13,9 +13,15 @@ nbviewer.egg-info/
 nbviewer/static/build/
 nbviewer/static/components/
 node_modules/
-notebook-*/
+notebook-*
+.eggs/
+MANIFEST
+package-lock.json
 Dockerfile
 venv/
 *.tgz
 *.tar.gz
 .idea
+localfile/
+notebooks.db
+NETCADLABS.md

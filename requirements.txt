@@ -18,3 +18,5 @@ matplotlib
 seaborn
 beautifulsoup4
 requests
+folium
+sklearn
