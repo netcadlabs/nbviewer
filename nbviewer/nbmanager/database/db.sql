@@ -13,3 +13,14 @@ CREATE TABLE IF NOT EXISTS notebook (
 	timeout integer,
 	error text
 );
+
+CREATE TABLE IF NOT EXISTS run_log (
+	id integer PRIMARY KEY,
+	notebook_id int NOT NULL,
+	notebook_code text NOT NULL,
+	code text NOT NULL,
+	exe_date text,
+	exe_time integer DEFAULT 0,
+	error text
+);
+

@@ -44,13 +44,13 @@
             <td class="nb-status-col">
                 {% if notebook.error %}
                 <button class="btn btn-sm btn-danger" onclick="showErrorDetailModal(this)"
-                        data-error="{{notebook.error}}">
+                        data-code="{{notebook.code}}" data-error="{{notebook.error}}">
                     <i class="fa fa-exclamation-circle"></i>
                 </button>
                 {% else %}
                 {% if notebook.exe_date %}
-                <button class="btn btn-sm btn-success danger" onclick="showRunDetailModal(this)"
-                >
+                <button class="btn btn-sm btn-success danger" data-code="{{notebook.code}}"
+                        onclick="showRunDetailModal(this)">
                     <i class="fa fa-check-circle"></i>
                 </button>
                 {% endif %}
@@ -211,7 +211,17 @@
                 <h4 class="modal-title" id="runModalLabel">Notebook Run Details</h4>
             </div>
             <div class="modal-body">
-                <h3>TODO - show run details</h3>
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Execution Time</th>
+                        <th scope="col">Result</th>
+                    </tr>
+                    </thead>
+                    <tbody id="run_logs_table">
+                    </tbody>
+                </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

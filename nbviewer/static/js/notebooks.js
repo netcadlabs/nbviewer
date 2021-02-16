@@ -22,9 +22,35 @@ function showErrorDetailModal(e) {
 }
 
 function showRunDetailModal(e) {
-    var detail = $(e).attr('data-error');
-    $('#run-details').text(detail);
+    var code = $(e).attr('data-code');
+//    var detail = $(e).attr('data-error');
+//    $('#run-details').text(detail);
     $('#runDetailModal').modal()
+    $('#run_logs_table').empty();
+    $.ajax({
+            url: '/notebooks/?code=' + code + '&action=run_logs',
+            type: 'GET'
+        }).done(function (res) {
+            console.log("delete success");
+            //TODO - use data table?
+            if(res && res.data){
+                for(var i = 0 ; i < res.data.length; i++){
+                    item = res.data[i];
+                    html = '<tr>';
+                    html += `<td>${item['exe_date']}</td>`;
+                     html += `<td>${item['exe_time']}</td>`;
+                     if(item['error'])
+                        html += `<td>ERROR</td>`;
+                     else
+                        html += `<td>OK</td>`;
+
+                     $('#run_logs_table').append(html)
+                }
+            }
+        })
+        .fail(function () {
+
+        });
 }
 
 function deleteNb(code) {

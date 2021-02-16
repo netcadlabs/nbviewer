@@ -27,8 +27,8 @@ class NotebookRunner:
 
         return (body, resources)
 
-    async def run_notebook(self, tenant_id, code):
-        notebook = DatabaseInstance.get().get_notebook_by_code(tenant_id, code)
+    async def run_notebook(self, notebook):
+
 
         timeout = notebook['timeout']
         output = notebook['code']

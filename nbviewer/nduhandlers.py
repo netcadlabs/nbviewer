@@ -1,3 +1,4 @@
+import time
 import uuid
 from datetime import datetime
 
@@ -41,6 +42,10 @@ def clean_data_for_ui(item: dict):
     return item
 
 
+nb_handler_action_codes = ['run', 'delete']
+nb_handler_run_log_action_codes = ['run_logs', 'clear_run_logs']
+
+
 class NotebookUploadHandler(BaseHandler):
     """Render the upload page"""
 
@@ -60,6 +65,7 @@ class NotebookUploadHandler(BaseHandler):
 
     async def __run_command(self, code: str, action: str):
         database = DatabaseInstance.get()
+        notebook = database.get_notebook_by_code(code)
 
         result = None
         if code is not None:
@@ -68,22 +74,35 @@ class NotebookUploadHandler(BaseHandler):
                 runner = NotebookRunner()
                 error = None
                 exe_date = datetime.now().strftime(DATETIME_FORMAT)
+                start_time = time.time()
                 try:
-                    await runner.run_notebook(tenantId, code)
+                    await runner.run_notebook(notebook)
                 except NotebookRunError as nre:
                     error = nre.args[0]
                     print(nre)
                 except Exception as e:
                     error = 'Unknown error while running notebook!'
 
+                run_log = {
+                    'notebook_id': notebook['id'],
+                    'notebook_code': code,
+                    'code': str(uuid.uuid4()),
+                    'exe_date': exe_date,
+                    'exe_time': time.time() - start_time,
+                    'error': None
+                }
+
                 if error:
                     result = {'result': False, 'error': error}
                     database.update_notebook(tenantId, code, {'error': error, 'exe_date': exe_date})
+                    run_log['error'] = error
                 else:
                     # file_manager = FileManager.get_instance()
                     # file_manager.create_preview_of_notebook(tenantId, code)
                     database.update_notebook(tenantId, code, {'error': None, 'exe_date': exe_date})
-                    result = clean_data_for_ui(database.get_notebook_by_code(tenantId, code))
+                    result = clean_data_for_ui(database.get_notebook_by_code(code))
+
+                database.save_run_log(run_log)
             elif action == 'delete':
                 self.__delete_notebook(tenantId, code)
                 result = {'result': True}
@@ -92,16 +111,30 @@ class NotebookUploadHandler(BaseHandler):
 
         return result
 
+    def __run_logs_command(self, code: str, action: str):
+        database = DatabaseInstance.get()
+        result = {'result': True}
+        if action == 'run_logs':
+            notebook = database.get_notebook_by_code(code)
+            run_logs = database.get_notebook_run_logs(notebook['id'])
+            result = {'data': run_logs}
+        elif action == 'clear_run_logs':
+            result = {'result': False}
+
+        return result
+
     async def get(self, *path_args, **path_kwargs):
-        code = self.get_argument('code', 'get')
+        code = self.get_argument('code', None)
         action = self.get_argument('action', None)
 
-        if code != 'get':
+        if action in nb_handler_action_codes:
             result = await self.__run_command(code, action)
-            self.finish(result)
+        elif action in nb_handler_run_log_action_codes:
+            result = self.__run_logs_command(code, action)
         else:
-            rendered_template = self.render_index_template(self.__get_notebooks(tenantId))
-            self.finish(rendered_template)
+            result = self.render_index_template(self.__get_notebooks(tenantId))
+
+        self.finish(result)
 
     def delete(self, code):
         args = self.request.query_arguments
