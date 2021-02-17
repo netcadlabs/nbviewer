@@ -11,6 +11,10 @@ class DatabaseProvider(ABC):
         pass
 
     @abstractmethod
+    def get_all_notebooks(self):
+        pass
+
+    @abstractmethod
     def get_tenant_notebooks(self, tenant_id: str):
         pass
 

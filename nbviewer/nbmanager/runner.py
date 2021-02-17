@@ -29,7 +29,6 @@ class NotebookRunner:
 
     async def run_notebook(self, notebook):
 
-
         timeout = notebook['timeout']
         output = notebook['code']
         notebook_file_path = notebook['path']

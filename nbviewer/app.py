@@ -84,8 +84,8 @@ def nrfoot():
 this_dir, this_filename = os.path.split(__file__)
 FRONTPAGE_JSON = os.path.join(this_dir, "frontpage.json")
 
-class NBViewer(Application):
 
+class NBViewer(Application):
     name = Unicode("NBViewer")
 
     aliases = Dict(
@@ -538,6 +538,7 @@ class NBViewer(Application):
     # Attribute inherited from traitlets.config.Application, automatically used to style logs
     # https://github.com/ipython/traitlets/blob/master/traitlets/config/application.py#L191
     _log_formatter_cls = LogFormatter
+
     # Need Tornado LogFormatter for color logs, keys 'color' and 'end_color' in log_format
 
     # Observed traitlet inherited again from traitlets.config.Application
@@ -784,6 +785,16 @@ class NBViewer(Application):
         from nbviewer.nbmanager.database_instance import DatabaseInstance
         database_manager = DatabaseInstance.get(self.log)
 
+    def init_cron_jobs(self):
+        from nbviewer.nbmanager.scheduler_instance import SchedulerInstance
+        from nbviewer.nbmanager.database_instance import DatabaseInstance
+        database_manager = DatabaseInstance.get(self.log)
+
+        notebooks = database_manager.get_all_notebooks()
+
+        schedulers = SchedulerInstance.get(log=self.log)
+        schedulers.add_notebook_jobs(notebooks)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -797,6 +808,7 @@ class NBViewer(Application):
         self.load_config_file(self.config_file)
         self.init_logging()
         self.init_data_instances()
+        self.init_cron_jobs()
         self.init_tornado_application()
 
 

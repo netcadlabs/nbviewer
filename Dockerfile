@@ -37,6 +37,7 @@ RUN apt-get update \
     ca-certificates \
     libcurl4 \
     git \
+    cron \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
@@ -44,6 +45,7 @@ COPY --from=builder /wheels /wheels
 RUN python3 -mpip install --no-cache /wheels/*
 
 ENV NB_DATA_FOLDER /srv/nbviewer/data
+ENV CRON_USERNAME appuser
 
 # To change the number of threads use
 # docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer

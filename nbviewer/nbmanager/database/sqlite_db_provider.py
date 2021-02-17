@@ -63,6 +63,15 @@ class SQLiteDbProvider(DatabaseProvider):
                         nb['path'], created_date, nb['cron'], nb['timeout']))
         self.conn.commit()
 
+    def get_all_notebooks(self):
+        result = []
+        cursor = self.conn.cursor()
+        res = cursor.execute("SELECT * FROM notebook")
+        for row in res:
+            result.append(self.convert_row_map(row, nb_columns))
+
+        return result
+
     def get_tenant_notebooks(self, tenant_id: str):
         result = []
         cursor = self.conn.cursor()
