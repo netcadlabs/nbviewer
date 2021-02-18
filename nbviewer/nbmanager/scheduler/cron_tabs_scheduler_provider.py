@@ -28,9 +28,6 @@ class CronTabsSchedulerProvider(SchedulerProvider):
         self.cron.write()
 
     def add_notebook_jobs(self, notebooks: list):
-        if notebooks is None or len(notebooks) == 0:
-            return
-
         remove_list = []
         for job in self.cron:
             remove_list.append(job)
@@ -40,11 +37,12 @@ class CronTabsSchedulerProvider(SchedulerProvider):
         for nb in notebooks:
             self.cron.remove_all(comment=nb['code'])
 
-        for nb in notebooks:
-            command = self.__get_notebook_command(nb)
-            # tab = "* * * * * {}".format(command)
-            job = self.cron.new(command=command, comment=nb['code'])
-            # job.minute.every(2)
+        if notebooks is not None:
+            for nb in notebooks:
+                command = self.__get_notebook_command(nb)
+                # tab = "* * * * * {}".format(command)
+                job = self.cron.new(command=command, comment=nb['code'])
+                # job.minute.every(2)
 
         self.cron.write()
 

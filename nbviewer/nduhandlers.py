@@ -1,3 +1,4 @@
+import json
 import time
 import uuid
 from datetime import datetime
@@ -6,6 +7,7 @@ from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORM
 from nbviewer.nbmanager.filemanager import FileManager
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 from nbviewer.nbmanager.runner import NotebookRunner
+from nbviewer.nbmanager.scheduler_instance import SchedulerInstance
 from nbviewer.providers.base import BaseHandler
 from bs4 import BeautifulSoup
 
@@ -42,6 +44,18 @@ def clean_data_for_ui(item: dict):
     return item
 
 
+def extract_cron_obj(arguments: dict) -> str:
+    result = {
+        'interval_type': get_argument_value(arguments, 'interval_type', None),
+        'every_type': get_argument_value(arguments, 'every_type', None),
+        'every_interval': get_argument_value(arguments, 'every_interval', None),
+        'each_type': get_argument_value(arguments, 'each_type', None),
+        'each_time': get_argument_value(arguments, 'each_time', None),
+    }
+
+    return json.dumps(result)
+
+
 nb_handler_action_codes = ['run', 'delete']
 nb_handler_run_log_action_codes = ['run_logs', 'clear_run_logs']
 
@@ -67,45 +81,18 @@ class NotebookUploadHandler(BaseHandler):
         database = DatabaseInstance.get()
         notebook = database.get_notebook_by_code(code)
 
-        result = None
+        result = {'result': True}
+
         if code is not None:
-            result = {}
             if action == 'run':
                 runner = NotebookRunner()
-                error = None
-                exe_date = datetime.now().strftime(DATETIME_FORMAT)
-                start_time = time.time()
                 try:
-                    await runner.run_notebook(notebook)
+                    await runner.run_w(notebook)
+                    result['data'] = clean_data_for_ui(database.get_notebook_by_code(code))
                 except NotebookRunError as nre:
-                    error = nre.args[0]
-                    print(nre)
-                except Exception as e:
-                    error = 'Unknown error while running notebook!'
-
-                run_log = {
-                    'notebook_id': notebook['id'],
-                    'notebook_code': code,
-                    'code': str(uuid.uuid4()),
-                    'exe_date': exe_date,
-                    'exe_time': time.time() - start_time,
-                    'error': None
-                }
-
-                if error:
-                    result = {'result': False, 'error': error}
-                    database.update_notebook(tenantId, code, {'error': error, 'exe_date': exe_date})
-                    run_log['error'] = error
-                else:
-                    # file_manager = FileManager.get_instance()
-                    # file_manager.create_preview_of_notebook(tenantId, code)
-                    database.update_notebook(tenantId, code, {'error': None, 'exe_date': exe_date})
-                    result = clean_data_for_ui(database.get_notebook_by_code(code))
-
-                database.save_run_log(run_log)
+                    result = {'result': False, 'error': nre.args[0]}
             elif action == 'delete':
                 self.__delete_notebook(tenantId, code)
-                result = {'result': True}
         else:
             result = {'result': False, 'error': 'Unknown action'}
 
@@ -141,7 +128,7 @@ class NotebookUploadHandler(BaseHandler):
         rendered_template = self.render_index_template(self.__get_notebooks(tenantId))
         self.finish(rendered_template)
 
-    def post(self, *path_args, **path_kwargs):
+    async def post(self, *path_args, **path_kwargs):
         try:
             if self.request.files is not None and self.request.files['file'] is not None \
                     and len(self.request.files['file']) > 0:
@@ -152,8 +139,11 @@ class NotebookUploadHandler(BaseHandler):
 
                 name = get_argument_value(self.request.body_arguments, 'name', '')
                 desc = get_argument_value(self.request.body_arguments, 'desc', '')
-                run = get_argument_value(self.request.body_arguments, 'run', 0)
-                cron = get_argument_value(self.request.body_arguments, 'cron', None)
+                run = get_argument_value(self.request.body_arguments, 'run', 'off')
+                cron_state = get_argument_value(self.request.body_arguments, 'cron_state', 'off')
+                cron = ''
+                if cron_state == 'on':
+                    cron = extract_cron_obj(self.request.body_arguments)
                 timeout = get_argument_value(self.request.body_arguments, 'timeout', 0)
 
                 if timeout is not None and timeout > 300:
@@ -168,13 +158,17 @@ class NotebookUploadHandler(BaseHandler):
                         'path': result['path'],
                         'name': str(name),
                         'desc': str(desc),
-                        'cron': str(cron),
+                        'cron': cron,
                         'timeout': timeout
                     }
                     database.save_notebook(notebook)
+                    notebook = DatabaseInstance.get().get_notebook_by_code(notebook['code'])
 
-                if run == 1:
-                    runner = NotebookRunner.run_notebook_thread()
+                    if run == 'on':
+                        notebook_runner = NotebookRunner()
+                        await notebook_runner.run_w(notebook)
+
+                    SchedulerInstance.get().add_notebook_job(notebook)
 
         except Exception as e:
             print(e)
@@ -188,15 +182,7 @@ class NotebookUploadHandler(BaseHandler):
         database.delete_notebook(tenant_id, code)
         file_manager = FileManager.get_instance()
         file_manager.delete_notebook_file(tenant_id, code)
-        return False
-        # try:
-        #     (body, resources) = runner.run(notebook['path'])
-        #     output_name = code + ".html"
-        #     f = open(output_name, "a")
-        #     f.write(body)
-        #     f.close()
-        # except Exception as e:
-        #     print(e)
+        return True
 
     def __get_notebooks(self, tenant_id):
         database = DatabaseInstance.get()

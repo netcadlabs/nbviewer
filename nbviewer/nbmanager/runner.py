@@ -1,3 +1,5 @@
+import time
+import uuid
 from datetime import datetime
 from subprocess import CalledProcessError, STDOUT
 import subprocess
@@ -9,9 +11,6 @@ from nbviewer.nbmanager.nb_run_error import NotebookRunError
 
 CALL_EXECUTION_TIMEOUT_ERROR_PATTERN = "Cell execution timed out"
 
-
-# async def run_with_cmd(notebook_file_path, output: str = 'output', format: str = 'html', timeout: int = None):
-#
 
 class NotebookRunner:
 
@@ -27,8 +26,51 @@ class NotebookRunner:
 
         return (body, resources)
 
-    async def run_notebook(self, notebook):
+    async def run_no_db(self, notebook):
+        try:
+            await self.__run_notebook(notebook)
+        except NotebookRunError as nre:
+            error = nre.args[0]
+            print(nre)
+        except Exception as e:
+            error = 'Unknown error while running notebook!'
 
+    async def run_w(self, notebook):
+        code = notebook['code']
+        tenant_id = notebook['tenant_id']
+
+        database = DatabaseInstance.get()
+        error = None
+        exe_date = datetime.now().strftime(DATETIME_FORMAT)
+        start_time = time.time()
+        try:
+            await self.__run_notebook(notebook)
+        except NotebookRunError as nre:
+            error = nre.args[0]
+            print(nre)
+        except Exception as e:
+            error = 'Unknown error while running notebook!'
+
+        run_log = {
+            'notebook_id': notebook['id'],
+            'notebook_code': code,
+            'code': str(uuid.uuid4()),
+            'exe_date': exe_date,
+            'exe_time': time.time() - start_time,
+            'error': None
+        }
+
+        if error:
+            database.update_notebook(tenant_id, code, {'error': error, 'exe_date': exe_date})
+            run_log['error'] = error
+        else:
+            # file_manager = FileManager.get_instance()
+            # file_manager.create_preview_of_notebook(tenantId, code)
+            database.update_notebook(tenant_id, code, {'error': None, 'exe_date': exe_date})
+
+        database.save_run_log(run_log)
+
+    async def __run_notebook(self, notebook):
         timeout = notebook['timeout']
         output = notebook['code']
         notebook_file_path = notebook['path']

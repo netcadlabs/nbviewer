@@ -21,3 +21,4 @@ requests
 folium
 sklearn
 python-crontab
+schedule

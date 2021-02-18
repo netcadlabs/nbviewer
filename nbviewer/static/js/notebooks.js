@@ -37,6 +37,7 @@ function showRunDetailModal(e) {
                 for(var i = 0 ; i < res.data.length; i++){
                     item = res.data[i];
                     html = '<tr>';
+                    html += `<th>${item['id']}</th>`;
                     html += `<td>${item['exe_date']}</td>`;
                      html += `<td>${item['exe_time']}</td>`;
                      if(item['error'])
@@ -109,6 +110,14 @@ function changeIntervalType(target) {
 
     //    console.log($(target).val())
 }
+
+function changeCronState(target) {
+    if(target.checked)
+        $('#cron-inputs').slideDown();
+    else
+        $('#cron-inputs').slideUp();
+}
+
 
 function copyTextToClipboard(elem, text) {
     if (!validURL(text))

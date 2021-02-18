@@ -47,7 +47,7 @@ class SQLiteDbProvider(DatabaseProvider):
     def __create_connection(self, db_file):
         """ create a database connection to a SQLite database """
         try:
-            self.conn = sqlite3.connect(db_file)
+            self.conn = sqlite3.connect(db_file, check_same_thread=False)
             print(sqlite3.version)
         except sqlite3.Error as e:
             self.log.error("Failed to initialize sql lite connection : %s", e)
@@ -121,10 +121,10 @@ class SQLiteDbProvider(DatabaseProvider):
                        (rl['notebook_id'], rl['notebook_code'], rl['code'], rl['exe_date'], rl['exe_time'], rl['error']))
         self.conn.commit()
 
-    def get_notebook_run_logs(self, notebook_id: int):
+    def get_notebook_run_logs(self, notebook_id: int, limit: int = 15):
         result = []
         cursor = self.conn.cursor()
-        res = cursor.execute("SELECT * FROM run_log where notebook_id = ?", [notebook_id])
+        res = cursor.execute("SELECT * FROM run_log where notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, limit])
         for row in res:
             result.append(self.convert_row_map(row, rl_columns))
 

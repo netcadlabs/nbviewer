@@ -107,7 +107,7 @@
                         <label for="desc">Description</label>
                         <textarea class="form-control" id="desc" name="desc" rows="2" required></textarea>
                     </div>
-                    <div class="form-group">
+                    <!--<div class="form-group">
                         <label for="cron">Run Crontab
                             <span class="label-help">
                             (<a target="_blank" href="https://crontab.guru">help about crontabs</a>)
@@ -115,8 +115,13 @@
                         </label>
                         <input type="text" class="form-control" id="cron" name="cron" style="font-weight: bold;"
                                placeholder="*/15 * * * * (at every 15th minute.)"></input>
+                    </div> -->
+                    <div class="checkbox">
+                        <label>
+                            <input name="cron_state" type="checkbox" onchange="changeCronState(this)"> Run Periodically
+                        </label>
                     </div>
-                    <!--<div class="form-row">
+                    <div class="form-row" id="cron-inputs" style="display:none;">
                         <div class="form-group col-md-4 col-np">
                             <label for="interval_type">Interval Type</label>
                             <select id="interval_type" name="interval_type" class="form-control"
@@ -127,6 +132,7 @@
                         </div>
                         <div id="interval-every">
                             <div class="form-group col-md-4 col-np">
+                                <!-- Starting 'Run Interval' second/minute/hour/day/week from now-->
                                 <label for="every_interval">Run Interval</label>
                                 <input type="number" class="form-control" id="every_interval" name="every_interval"
                                        value="1"/>
@@ -134,10 +140,11 @@
                             <div class="form-group col-md-4 col-np">
                                 <label for="every_type">Type</label>
                                 <select id="every_type" name="every_type" class="form-control">
-                                    <option value="minute">Minute</option>
-                                    <option value="hour" selected>Hour</option>
-                                    <option value="day">Day</option>
-                                    <option value="week">Week</option>
+                                <!--<option value="seconds">Seconds - will be removed</option>-->
+                                    <option value="minutes">Minutes</option>
+                                    <option value="hours" selected>Hours</option>
+                                    <option value="days">Days</option>
+                                    <option value="weeks">Weeks</option>
                                 </select>
                             </div>
                         </div>
@@ -156,7 +163,7 @@
                                 <input class="form-control" type="time" name="each_time" id="each_time">
                             </div>
                         </div>
-                    </div> -->
+                    </div>
                     <div class="form-group">
                         <label for="timeout">Run timeout for each cell(in second)</label>
                         <input type="number" min="1" max="6000" class="form-control" id="timeout" name="timeout"
@@ -164,7 +171,7 @@
                     </div>
                     <div class="checkbox">
                         <label>
-                            <input name="run" type="checkbox" value="1"> Run after upload
+                            <input name="run" type="checkbox"> Run after upload
                         </label>
                     </div>
                     <div class="form-group">
@@ -211,11 +218,13 @@
                 <h4 class="modal-title" id="runModalLabel">Notebook Run Details</h4>
             </div>
             <div class="modal-body">
+                <div>This table shows the last 15 run results.</div>
                 <table class="table table-hover">
                     <thead>
                     <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col">Execution Time</th>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Execution Time (second)</th>
                         <th scope="col">Result</th>
                     </tr>
                     </thead>
