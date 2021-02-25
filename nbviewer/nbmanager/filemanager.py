@@ -95,6 +95,20 @@ class FileManager:
 
         return content
 
+    def notebook_content(self, tenant_id, code):
+        tenant_folder = path.join(self.notebooks_folder, tenant_id)
+        file_path = tenant_folder + os.path.sep + code + '.ipynb'
+
+        content = None
+        if os.path.isfile(file_path):
+            with open(file_path) as f:
+                content = f.read()
+        else:
+            raise FileNotFoundError('Notebook file not found!')
+
+        return content
+
+
     def notebook_html_file_path(self, tenant_id, code):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
         file_path = tenant_folder + os.path.sep + code + '.html'

@@ -122,6 +122,7 @@ def init_handlers(formats, providers, base_url, localfiles, **handler_kwargs):
     index_handler = _load_handler_from_location(handler_names["index_handler"])
     notebooks_upload_handler = _load_handler_from_location(handler_names["notebooks_upload_handler"])
     notebooks_output_handler = _load_handler_from_location(handler_names["notebooks_output_handler"])
+    notebooks_download_handler = _load_handler_from_location(handler_names["notebooks_download_handler"])
 
     # If requested endpoint matches multiple routes, it only gets handled by handler
     # corresponding to the first matching route. So order of URLSpecs in this list matters.
@@ -131,6 +132,7 @@ def init_handlers(formats, providers, base_url, localfiles, **handler_kwargs):
         (r"/faq/?", faq_handler, {}),
         (r"/notebooks/?(.*)", notebooks_upload_handler, {}),
         (r"/outputs/?(.*)", notebooks_output_handler, {}),
+        (r"/download/?(.*)", notebooks_download_handler, {}),
         (r"/create/?", create_handler, {}),
         # don't let super old browsers request data-uris
         (r".*/data:.*;base64,.*", custom404_handler, {}),

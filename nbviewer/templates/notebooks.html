@@ -28,8 +28,8 @@
             <th scope="row">{{notebook.id}}</th>
             <td>{{notebook.name}}</td>
             <td>
-                <i class="fa fa-book"></i>
-                <a target="_blank" href="{{ notebook_locale_url(notebook) }}">{{notebook.file_name}}</a>
+                <i class="fa fa-download"></i>
+                <a target="_blank" href="{{ notebook_download_url(notebook) }}">{{notebook.file_name}}</a>
             </td>
             <td>
                 {% if notebook.exe_date %}

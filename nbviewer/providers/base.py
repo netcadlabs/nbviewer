@@ -244,6 +244,10 @@ class BaseHandler(web.RequestHandler):
         return "/localfile/"
 
     @property
+    def download_url_prefix(self):
+        return "/download/"
+
+    @property
     def statsd(self):
         if hasattr(self, "_statsd"):
             return self._statsd
@@ -293,6 +297,7 @@ class BaseHandler(web.RequestHandler):
             "static_url": self.static_url,
             "from_base": self.from_base,
             "notebook_locale_url": self.notebook_locale_url,
+            "notebook_download_url": self.notebook_download_url,
             "notebook_output_url": self.notebook_output_url,
             "notebook_output_url_for_copy": self.notebook_output_url_for_copy,
             "google_analytics_id": self.settings.get("google_analytics_id"),
@@ -307,6 +312,9 @@ class BaseHandler(web.RequestHandler):
 
     def notebook_locale_url(self, notebook):
         return url_path_join(self.localfile_url_prefix, notebook['tenant_id'], notebook['code'] + '.ipynb')
+
+    def notebook_download_url(self, notebook):
+        return url_path_join(self.download_url_prefix, notebook['tenant_id'], notebook['code'] + '.ipynb')
 
     def notebook_output_url(self, notebook):
         return url_path_join('/outputs', notebook['code'])

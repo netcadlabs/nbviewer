@@ -224,6 +224,12 @@ class NBViewer(Application):
         help="The Tornado handler to show output of notebooks.",
     ).tag(config=True)
 
+
+    notebooks_download_handler = Unicode(
+        default_value="nbviewer.nduhandlers.DownloadHandler",
+        help="The Tornado handler to download notebooks.",
+    ).tag(config=True)
+
     # base_url specified by the user
     base_url = Unicode(default_value="/", help="URL base for the server").tag(
         config=True
@@ -639,6 +645,7 @@ class NBViewer(Application):
             user_gists_handler=self.user_gists_handler,
             notebooks_upload_handler=self.notebooks_upload_handler,
             notebooks_output_handler=self.notebooks_output_handler,
+            notebooks_download_handler=self.notebooks_download_handler
         )
         handler_kwargs = {
             "handler_names": handler_names,
