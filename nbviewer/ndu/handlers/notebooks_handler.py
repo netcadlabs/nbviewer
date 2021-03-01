@@ -1,65 +1,20 @@
-import json
-import uuid
-
-from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORMAT
+from nbviewer.nbmanager.database_instance import DatabaseInstance
 from nbviewer.nbmanager.filemanager import FileManager
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 from nbviewer.nbmanager.runner import NotebookRunner
 from nbviewer.nbmanager.scheduler_instance import SchedulerInstance
-from nbviewer.providers.base import BaseHandler
-from bs4 import BeautifulSoup
-
-tenantId = 'test-tenant-id'
-
-
-def get_argument_value(arguments: dict, name, default_value=''):
-    if arguments and arguments.get(name, None) is not None:
-        values = arguments.get(name)
-        value = None
-        if len(values) > 0:
-            value = values[0]
-            if isinstance(value, bytes):
-                value = value.decode("utf-8")
-
-        if value is not None:
-            if default_value is not None and isinstance(default_value, int):
-                value = int(value)
-            return value
-
-    return default_value
-
-
-def __get_notebook(tenant_id, code):
-    notebook = DatabaseInstance.get().get_tenant_notebooks(tenant_id, code)
-    return clean_data_for_ui(notebook)
-
-
-def clean_data_for_ui(item: dict):
-    remove_keys = ['path']
-    for key in remove_keys:
-        if key in item:
-            item.pop(key)
-    return item
-
-
-def extract_cron_obj(arguments: dict) -> str:
-    result = {
-        'interval_type': get_argument_value(arguments, 'interval_type', None),
-        'every_type': get_argument_value(arguments, 'every_type', None),
-        'every_interval': get_argument_value(arguments, 'every_interval', None),
-        'each_type': get_argument_value(arguments, 'each_type', None),
-        'each_time': get_argument_value(arguments, 'each_time', None),
-    }
-
-    return json.dumps(result)
-
+from nbviewer.ndu.handlers.ndu_base_handler import NDUBaseHandler
+from nbviewer.ndu.utils import clean_data_for_ui, get_argument_value, extract_cron_obj
 
 nb_handler_action_codes = ['run', 'delete']
 nb_handler_run_log_action_codes = ['run_logs', 'clear_run_logs']
 
 
-class NotebookUploadHandler(BaseHandler):
+class NotebooksHandler(NDUBaseHandler):
     """Render the upload page"""
+
+    def get_pattern(self):
+        return r"/notebooks/?(.*)"
 
     # def __init__(self):
     #     self.database = Database()
@@ -75,7 +30,7 @@ class NotebookUploadHandler(BaseHandler):
             **other
         )
 
-    async def __run_command(self, code: str, action: str):
+    async def __run_command(self, tenant_id: str, code: str, action: str):
         database = DatabaseInstance.get()
         notebook = database.get_notebook_by_code(code)
 
@@ -90,7 +45,7 @@ class NotebookUploadHandler(BaseHandler):
                 except NotebookRunError as nre:
                     result = {'result': False, 'error': nre.args[0]}
             elif action == 'delete':
-                self.__delete_notebook(tenantId, code)
+                self.__delete_notebook(tenant_id, code)
         else:
             result = {'result': False, 'error': 'Unknown action'}
 
@@ -109,25 +64,32 @@ class NotebookUploadHandler(BaseHandler):
         return result
 
     async def get(self, *path_args, **path_kwargs):
+        curr_user = self.check_token()
+        tenant_id = curr_user['tenantId']
+
         code = self.get_argument('code', None)
         action = self.get_argument('action', None)
 
         if action in nb_handler_action_codes:
-            result = await self.__run_command(code, action)
+            result = await self.__run_command(tenant_id, code, action)
         elif action in nb_handler_run_log_action_codes:
             result = self.__run_logs_command(code, action)
         else:
-            result = self.render_index_template(self.__get_notebooks(tenantId))
+            result = self.render_index_template(self.__get_notebooks(tenant_id))
 
         self.finish(result)
 
     def delete(self, code):
+        curr_user = self.check_token()
         args = self.request.query_arguments
-        rendered_template = self.render_index_template(self.__get_notebooks(tenantId))
+        rendered_template = self.render_index_template(self.__get_notebooks(curr_user['tenantId']))
         self.finish(rendered_template)
 
     async def post(self, *path_args, **path_kwargs):
         try:
+            curr_user = self.check_token()
+            tenant_id = curr_user['tenantId']
+
             if self.request.files is not None and self.request.files['file'] is not None \
                     and len(self.request.files['file']) > 0:
                 file = self.request.files['file'][0]
@@ -147,10 +109,10 @@ class NotebookUploadHandler(BaseHandler):
                 if timeout is not None and timeout > 300:
                     timeout = 60
 
-                result = file_manager.save_notebook_file(tenantId, file)
+                result = file_manager.save_notebook_file(tenant_id, file)
                 if result is not None:
                     notebook = {
-                        'tenant_id': tenantId,
+                        'tenant_id': tenant_id,
                         'code': result['code'],
                         'file_name': result['file_name'],
                         'path': result['path'],
@@ -171,7 +133,7 @@ class NotebookUploadHandler(BaseHandler):
         except Exception as e:
             print(e)
 
-        notebooks = self.__get_notebooks(tenantId)
+        notebooks = self.__get_notebooks(tenant_id)
         rendered_template = self.render_index_template(notebooks)
         self.finish(rendered_template)
 
@@ -190,86 +152,3 @@ class NotebookUploadHandler(BaseHandler):
             item['preview_img'] = item['code'] + ".img"
 
         return notebooks
-
-
-NOT_ALLOWED_OUTPUT_SOURCES = ['style.min.css.map', 'custom.css']
-
-HIDDEN_OUTPUT_CLASSES = ['prompt', 'input_prompt', 'output_prompt', 'input']
-
-
-def is_valid_uuid(val):
-    try:
-        uuid.UUID(str(val))
-        return True
-    except ValueError:
-        return False
-
-
-class NotebookHtmlOutputHandler(BaseHandler):
-
-    def get(self, *path_args, **path_kwargs):
-        uri_parts = self.request.uri.split('/')
-
-        code = None
-        if len(uri_parts) > 2:
-            code = uri_parts[2]
-
-        if '?' in code:
-            code = code.split('?')[0]
-
-        # if code in NOT_ALLOWED_OUTPUT_SOURCES:
-        #     self.finish('')
-        #     return
-
-        if not is_valid_uuid(code):
-            self.finish('Not valid output code')
-            return
-
-        hide_inputs = self.get_argument('hide-inputs', True)
-
-        try:
-            file_manager = FileManager.get_instance()
-            content = file_manager.notebook_html_content(tenantId, code)
-
-            if hide_inputs:
-                soup = BeautifulSoup(content)
-                for cls in HIDDEN_OUTPUT_CLASSES:
-                    removals = soup.find_all('div', {'class': cls})
-                    for match in removals:
-                        match.decompose()
-                content = str(soup)
-
-            self.finish(content)
-        except FileNotFoundError as fne:
-            self.set_status(404)
-            self.finish(self.render_template("output_not_found.html", message=str(fne)))
-
-
-class DownloadHandler(BaseHandler):
-    def get(self, *path_args, **path_kwargs):
-        uri_parts = self.request.uri.split('/')
-
-        if not len(uri_parts) is 4:
-            self.set_status(400)
-            self.finish()
-            return
-
-        tenant_id = uri_parts[2]
-        notebook_code = uri_parts[3]
-
-        if notebook_code and '.' in notebook_code:
-            notebook_code = notebook_code.split('.')[0]
-
-        try:
-            notebook = DatabaseInstance.get().get_notebook_by_code(notebook_code)
-
-            file_manager = FileManager.get_instance()
-            content = file_manager.notebook_content(tenant_id, notebook_code)
-
-            self.set_header('Content-Type', 'application/octet-stream')
-            self.set_header('Content-Disposition', 'attachment; filename=' + notebook['file_name'])
-            self.write(content)
-        except FileNotFoundError as fne:
-            self.set_status(404)
-            self.finish(self.render_template("output_not_found.html", message=str(fne)))
-

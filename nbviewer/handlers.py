@@ -14,6 +14,7 @@ from .providers.base import format_prefix
 from .utils import transform_ipynb_uri
 from .utils import url_path_join
 
+
 # -----------------------------------------------------------------------------
 # Handler classes
 # -----------------------------------------------------------------------------
@@ -120,9 +121,6 @@ def init_handlers(formats, providers, base_url, localfiles, **handler_kwargs):
     custom404_handler = _load_handler_from_location(handler_names["custom404_handler"])
     faq_handler = _load_handler_from_location(handler_names["faq_handler"])
     index_handler = _load_handler_from_location(handler_names["index_handler"])
-    notebooks_upload_handler = _load_handler_from_location(handler_names["notebooks_upload_handler"])
-    notebooks_output_handler = _load_handler_from_location(handler_names["notebooks_output_handler"])
-    notebooks_download_handler = _load_handler_from_location(handler_names["notebooks_download_handler"])
 
     # If requested endpoint matches multiple routes, it only gets handled by handler
     # corresponding to the first matching route. So order of URLSpecs in this list matters.
@@ -130,13 +128,17 @@ def init_handlers(formats, providers, base_url, localfiles, **handler_kwargs):
         ("/?", index_handler, {}),
         ("/index.html", index_handler, {}),
         (r"/faq/?", faq_handler, {}),
-        (r"/notebooks/?(.*)", notebooks_upload_handler, {}),
-        (r"/outputs/?(.*)", notebooks_output_handler, {}),
-        (r"/download/?(.*)", notebooks_download_handler, {}),
+        # (r"/notebooks/?(.*)", notebooks_upload_handler, {}),
+        # (r"/outputs/?(.*)", notebooks_output_handler, {}),
+        # (r"/download/?(.*)", notebooks_download_handler, {}),
         (r"/create/?", create_handler, {}),
         # don't let super old browsers request data-uris
         (r".*/data:.*;base64,.*", custom404_handler, {}),
     ]
+
+    ndu_pre_providers = handler_kwargs["ndu_pre_providers"]
+    for handler_provider in ndu_pre_providers:
+        pre_providers.append(handler_provider)
 
     post_providers = [(r"/(robots\.txt|favicon\.ico)", web.StaticFileHandler, {})]
 
@@ -149,10 +151,10 @@ def init_handlers(formats, providers, base_url, localfiles, **handler_kwargs):
     handlers = provider_handlers(providers, **handler_kwargs)
 
     raw_handlers = (
-        pre_providers
-        + handlers
-        + format_handlers(formats, handlers, **handler_settings)
-        + post_providers
+            pre_providers
+            + handlers
+            + format_handlers(formats, handlers, **handler_settings)
+            + post_providers
     )
 
     new_handlers = []

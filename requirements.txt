@@ -22,3 +22,4 @@ folium
 sklearn
 python-crontab
 schedule
+pyjwt

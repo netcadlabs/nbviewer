@@ -1,0 +1,30 @@
+{% extends "layout_ndu.html" %}
+
+{% block body %}
+<section>
+    <div class="container h-100">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="col-10 col-md-8 col-lg-6">
+                <p class="description">Use you NDU login credentials t login.</p>
+                <form id="nb-form" class="upload-form" enctype="multipart/form-data" method="post"
+                      action="{{ from_base('/login/') }}">
+                    <div class="form-group">
+                        <label for="email">E-Mail</label>
+                        <input type="email" class="form-control" id="email" name="email" required></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required></input>
+                    </div>
+                    <div style="margin: 15px 0px;">
+                        <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
+                            Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock body %}

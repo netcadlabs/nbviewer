@@ -43,6 +43,7 @@ from nbviewer.formats import default_formats
 from nbviewer.handlers import init_handlers
 from nbviewer.index import NoSearch
 from nbviewer.log import log_request
+from nbviewer.ndu.ndu import NDU
 from nbviewer.providers import default_providers
 from nbviewer.providers import default_rewrites
 from nbviewer.ratelimit import RateLimiter
@@ -214,22 +215,6 @@ class NBViewer(Application):
         help="Answer yes to any questions (e.g. confirm overwrite).",
     ).tag(config=True)
 
-    notebooks_upload_handler = Unicode(
-        default_value="nbviewer.nduhandlers.NotebookUploadHandler",
-        help="The Tornado handler to allow upload and managing uploaded notebooks.",
-    ).tag(config=True)
-
-    notebooks_output_handler = Unicode(
-        default_value="nbviewer.nduhandlers.NotebookHtmlOutputHandler",
-        help="The Tornado handler to show output of notebooks.",
-    ).tag(config=True)
-
-
-    notebooks_download_handler = Unicode(
-        default_value="nbviewer.nduhandlers.DownloadHandler",
-        help="The Tornado handler to download notebooks.",
-    ).tag(config=True)
-
     # base_url specified by the user
     base_url = Unicode(default_value="/", help="URL base for the server").tag(
         config=True
@@ -363,13 +348,13 @@ class NBViewer(Application):
     ).tag(config=True)
 
     provider_rewrites = List(
-        trait=Unicode,
+        trait=Unicode(),
         default_value=default_rewrites,
         help="Full dotted package(s) that provide `uri_rewrites`.",
     ).tag(config=True)
 
     providers = List(
-        trait=Unicode,
+        trait=Unicode(),
         default_value=default_providers,
         help="Full dotted package(s) that provide `default_handlers`.",
     ).tag(config=True)
@@ -642,14 +627,14 @@ class NBViewer(Application):
             index_handler=self.index_handler,
             local_handler=self.local_handler,
             url_handler=self.url_handler,
-            user_gists_handler=self.user_gists_handler,
-            notebooks_upload_handler=self.notebooks_upload_handler,
-            notebooks_output_handler=self.notebooks_output_handler,
-            notebooks_download_handler=self.notebooks_download_handler
+            user_gists_handler=self.user_gists_handler
         )
+
+        ndu = NDU()
         handler_kwargs = {
             "handler_names": handler_names,
             "handler_settings": self.handler_settings,
+            "ndu_pre_providers": ndu.get_ndu_handlers()
         }
 
         handlers = init_handlers(
@@ -713,6 +698,7 @@ class NBViewer(Application):
             statsd_host=self.statsd_host,
             statsd_port=self.statsd_port,
             statsd_prefix=self.statsd_prefix,
+            cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
         )
 
         if self.localfiles:
