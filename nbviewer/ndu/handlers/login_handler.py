@@ -29,7 +29,7 @@ class LoginHandler(NDUBaseHandler):
         password = self.get_argument('password', default=None)
 
         try:
-            token_data = self.ndu_login(email,password)
+            token_data = self.ndu_login(email, password)
             self.set_secure_cookie(self.token_cookie_name, token_data['token'])
             self.redirect("/notebooks/")
         except ValueError as err:
@@ -38,7 +38,7 @@ class LoginHandler(NDUBaseHandler):
             self.finish(result)
 
     def ndu_login(self, email, password):
-        url = 'http://localhost:8080/api/auth/login'
+        url = self.ndu_base_url + '/api/auth/login'
         body = {
             'username': email,
             'password': password

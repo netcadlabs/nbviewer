@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 from os import path
 
@@ -19,7 +20,9 @@ def check_folder(folder: str):
         print(e)
         return False
 
+
 DEFAULT_FOLDER = '/var/nbviewer/data'
+
 
 class FileManager:
     __instance = None
@@ -50,41 +53,54 @@ class FileManager:
         else:
             FileManager.__instance = self
 
-    def delete_notebook_file(self, tenant_id: str, code: str):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id)
+    def __create_notebook_folder(self, tenant_id, notebook_code):
+        tenant_folder = path.join(self.notebooks_folder, tenant_id, notebook_code)
+        check_folder(tenant_folder)
 
-        file_path = tenant_folder + os.path.sep + code + ".ipynb"
+        outputs_folder = path.join(tenant_folder, 'outputs')
+        check_folder(outputs_folder)
+
+        return tenant_folder;
+
+    def delete_notebook_file(self, tenant_id: str, code: str):
+        notebook_folder = path.join(self.notebooks_folder, tenant_id, code)
+
+        file_path = notebook_folder + os.path.sep + code + ".ipynb"
         if os.path.isfile(file_path):
             os.remove(file_path)
 
-        o_file_path = tenant_folder + os.path.sep + code + ".html"
-        if os.path.isfile(o_file_path):
-            os.remove(o_file_path)
+        o_file_path = notebook_folder + os.path.sep + ".outputs"
+        if os.path.isdir(o_file_path):
+            os.rmdir(o_file_path)
+
+        if os.path.isdir(notebook_folder):
+            shutil.rmtree(notebook_folder)
 
     def save_notebook_file(self, tenant_id: str, file):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id)
-        check_folder(tenant_folder)
+        notebook_code = str(uuid.uuid4())
+
+        tenant_folder = self.__create_notebook_folder(tenant_id, notebook_code)
 
         original_file_name = file['filename']
         extension = os.path.splitext(original_file_name)[1]
         if extension != ".ipynb":
             raise Exception("File extension is not .ipynb")
-        code = str(uuid.uuid4())
-        final_filename = code + extension
+
+        final_filename = notebook_code + extension
 
         file_path = tenant_folder + os.path.sep + final_filename
-        output_file = open(file_path, 'wb')
-        output_file.write(file['body'])
+        with open(file_path, 'wb') as output_file:
+            output_file.write(file['body'])
 
         return {
             'result': True,
-            'code': code,
+            'code': notebook_code,
             'file_name': original_file_name,
             'path': file_path
         }
 
-    def notebook_html_content(self, tenant_id, code):
-        file_path = self.notebook_html_file_path(tenant_id, code)
+    def get_notebook_html_content(self, tenant_id, notebook_code, output_code):
+        file_path = self.get_notebook_html_file_path(tenant_id, notebook_code, output_code)
 
         content = None
         if os.path.isfile(file_path):
@@ -96,8 +112,8 @@ class FileManager:
         return content
 
     def notebook_content(self, tenant_id, code):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id)
-        file_path = tenant_folder + os.path.sep + code + '.ipynb'
+        notebook_folder = path.join(self.notebooks_folder, tenant_id, code)
+        file_path = notebook_folder + os.path.sep + code + '.ipynb'
 
         content = None
         if os.path.isfile(file_path):
@@ -108,17 +124,16 @@ class FileManager:
 
         return content
 
-
-    def notebook_html_file_path(self, tenant_id, code):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id)
-        file_path = tenant_folder + os.path.sep + code + '.html'
+    def get_notebook_html_file_path(self, tenant_id, notebook_code, output_code):
+        notebook_folder = path.join(self.notebooks_folder, tenant_id, notebook_code, 'outputs')
+        file_path = notebook_folder + os.path.sep + output_code + '.html'
 
         return file_path
 
     def create_preview_of_notebook(self, tenant_id, code, source_ext="html", target_ext="jpg"):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id)
-        file_path = tenant_folder + os.path.sep + code + '.' + source_ext
-        img_file_path = tenant_folder + os.path.sep + code + '.' + target_ext
+        notebook_folder = path.join(self.notebooks_folder, tenant_id, code)
+        file_path = notebook_folder + os.path.sep + code + '.' + source_ext
+        img_file_path = notebook_folder + os.path.sep + code + '.' + target_ext
 
         try:
             if os.path.isfile(file_path):

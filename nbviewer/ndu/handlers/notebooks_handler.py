@@ -138,6 +138,7 @@ class NotebooksHandler(NDUBaseHandler):
         self.finish(rendered_template)
 
     def __delete_notebook(self, tenant_id, code):
+        SchedulerInstance.get().remove_notebook_job(code)
         database = DatabaseInstance.get()
         database.delete_notebook(tenant_id, code)
         file_manager = FileManager.get_instance()

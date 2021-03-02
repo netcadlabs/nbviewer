@@ -248,6 +248,10 @@ class BaseHandler(web.RequestHandler):
         return "/download/"
 
     @property
+    def ndu_base_url(self):
+        return self.settings["ndu_base_url"]
+
+    @property
     def statsd(self):
         if hasattr(self, "_statsd"):
             return self._statsd

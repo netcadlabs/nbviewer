@@ -698,7 +698,8 @@ class NBViewer(Application):
             statsd_host=self.statsd_host,
             statsd_port=self.statsd_port,
             statsd_prefix=self.statsd_prefix,
-            cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
+            cookie_secret="cookie-secret-1234567",
+            ndu_base_url=os.getenv("NDU_BASE_URL", default="https://smartapp.netcad.com")
         )
 
         if self.localfiles:

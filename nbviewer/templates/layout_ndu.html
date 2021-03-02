@@ -172,20 +172,20 @@
   </script>
   {% endif %}
   <script>
-    require({
-        paths: {
-          moment: "{{ static_url("components/moment/min/moment.min.js") }}"
-        }
-      }, ["moment"], function(moment){
-      var date = $("footer .date"),
-        m = moment(new Date(date.data('date'))),
-        update = function(){ date.text(m.fromNow()); };
-      setInterval(update, 61*1000);
-      update();
-      var w = $(window).scroll(function(event){
-        $("body").toggleClass("scrolled", w.scrollTop() > 0);
-      });
-    });
+    // require({
+    //     paths: {
+    //       moment: "{{ static_url("components/moment/min/moment.min.js") }}"
+    //     }
+    //   }, ["moment"], function(moment){
+    //   var date = $("footer .date"),
+    //     m = moment(new Date(date.data('date'))),
+    //     update = function(){ date.text(m.fromNow()); };
+    //   setInterval(update, 61*1000);
+    //   update();
+    //   var w = $(window).scroll(function(event){
+    //     $("body").toggleClass("scrolled", w.scrollTop() > 0);
+    //   });
+    // });
   </script>
 
   <!--NEW RELIC Stop Perf Measurement-->

@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from datetime import datetime
@@ -39,12 +40,14 @@ class NotebookRunner:
         code = notebook['code']
         tenant_id = notebook['tenant_id']
 
+        output_code = str(uuid.uuid4())
+
         database = DatabaseInstance.get()
         error = None
         exe_date = datetime.now().strftime(DATETIME_FORMAT)
         start_time = time.time()
         try:
-            await self.__run_notebook(notebook)
+            await self.__run_notebook(notebook, output_code=output_code)
         except NotebookRunError as nre:
             error = nre.args[0]
             print(nre)
@@ -54,7 +57,7 @@ class NotebookRunner:
         run_log = {
             'notebook_id': notebook['id'],
             'notebook_code': code,
-            'code': str(uuid.uuid4()),
+            'code': output_code,
             'exe_date': exe_date,
             'exe_time': time.time() - start_time,
             'error': None
@@ -70,13 +73,16 @@ class NotebookRunner:
 
         database.save_run_log(run_log)
 
-    async def __run_notebook(self, notebook):
+    async def __run_notebook(self, notebook, output_code: str = None):
         timeout = notebook['timeout']
-        output = notebook['code']
+        notebook_code = notebook['code']
         notebook_file_path = notebook['path']
-        format = 'html'
+        output_format = 'html'
 
-        output_name = str(output) + '.' + str(format)
+        output_name = str(notebook_code) + '.' + str(output_format)
+        if output_code:
+            output_name = os.path.join('outputs', str(output_code) + '.' + str(output_format))
+
         try:
             result = ''
             command_args = ['jupyter', 'nbconvert', '--execute', notebook_file_path, '--output', output_name]
@@ -84,7 +90,7 @@ class NotebookRunner:
             if timeout is not None and timeout != 0 and isinstance(timeout, int):
                 command_args.append("--ExecutePreprocessor.timeout={}".format(timeout))
 
-            if format == 'html':
+            if output_format == 'html':
                 command_args.extend(['--to', 'html'])
                 result = subprocess.check_output(command_args, stderr=STDOUT)
             else:

@@ -41,3 +41,8 @@ ipykernel_launcher
  
  docker run -v ./data/:/srv/nbviewer/data/ -p 5000:5000 netcadlabs/nbviewer
  
+ 
+# LOCAL DEV
+
+
+ 

@@ -140,7 +140,7 @@
                             <div class="form-group col-md-4 col-np">
                                 <label for="every_type">Type</label>
                                 <select id="every_type" name="every_type" class="form-control">
-                                <!--<option value="seconds">Seconds - will be removed</option>-->
+                                    <!--<option value="seconds">Seconds - will be removed</option>-->
                                     <option value="minutes">Minutes</option>
                                     <option value="hours" selected>Hours</option>
                                     <option value="days">Days</option>
@@ -166,8 +166,8 @@
                     </div>
                     <div class="form-group">
                         <label for="timeout">Run timeout for each cell(in second)</label>
-                        <input type="number" min="1" max="6000" class="form-control" id="timeout" name="timeout"
-                               value="5000"></input>
+                        <input type="number" min="1" max="600" class="form-control" id="timeout" name="timeout"
+                               value="5"></input>
                     </div>
                     <div class="checkbox">
                         <label>
@@ -219,17 +219,17 @@
             </div>
             <div class="modal-body">
                 <div>This table shows the last 15 run results.</div>
-                <table class="table table-hover">
+                <table class="table table-hover" id="run_logs_table" data-toggle="table">
                     <thead>
                     <tr>
-                        <th scope="col">#Id</th>
-                        <th scope="col">Datetime</th>
-                        <th scope="col">Execution Time (second)</th>
-                        <th scope="col">Result</th>
+                        <th scope="col" data-field="id">#Id</th>
+                        <th scope="col" data-field="exe_date">Datetime</th>
+                        <th scope="col" data-field="exe_time">Execution Time (second)</th>
+                        <th scope="col" data-field="exe_error">Result</th>
                     </tr>
                     </thead>
-                    <tbody id="run_logs_table">
-                    </tbody>
+<!--                    <tbody id="run_logs_table">-->
+<!--                    </tbody>-->
                 </table>
             </div>
             <div class="modal-footer">
@@ -239,8 +239,18 @@
     </div>
 </div>
 
-<script src="{{ static_url('js/notebooks.js') }}"></script>
+
 
 {% endblock body %}
+
+{% block extra_head %}
+    <link href="{{ static_url('components/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_script %}
+    <script src="{{ static_url('components/datatables.net/js/jquery.dataTables.js') }}"></script>
+<!--    <script src="{{ static_url('components/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>-->
+    <script src="{{ static_url('js/notebooks.js') }}"></script>
+{% endblock %}
 
 

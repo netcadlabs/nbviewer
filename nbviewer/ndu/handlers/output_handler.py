@@ -23,6 +23,9 @@ class NotebookHtmlOutputHandler(NDUBaseHandler):
         if '?' in code:
             code = code.split('?')[0]
 
+        hide_inputs = self.get_argument('hide-inputs', True)
+        output_code = self.get_argument('output', None)
+
         # if code in NOT_ALLOWED_OUTPUT_SOURCES:
         #     self.finish('')
         #     return
@@ -33,18 +36,24 @@ class NotebookHtmlOutputHandler(NDUBaseHandler):
 
         database = DatabaseInstance.get()
         notebook = database.get_notebook_by_code(code)
+        if output_code is None:
+            run_log = database.get_notebook_last_run_log(notebook['id'])
+            if not run_log or run_log.get('code', None) is None:
+                self.finish('Not valid output code 2')
+                return
+            output_code = run_log['code']
 
         if not notebook:
-            self.finish('Not valid output code 2')
+            self.finish('Not valid output code 3')
             return
 
-        hide_inputs = self.get_argument('hide-inputs', True)
+
 
         try:
             file_manager = FileManager.get_instance()
-            content = file_manager.notebook_html_content(notebook['tenant_id'], code)
+            content = file_manager.get_notebook_html_content(notebook['tenant_id'], code, output_code)
 
-            if hide_inputs:
+            if hide_inputs and hide_inputs.lower() == 'true':
                 soup = BeautifulSoup(content)
                 for cls in HIDDEN_OUTPUT_CLASSES:
                     removals = soup.find_all('div', {'class': cls})

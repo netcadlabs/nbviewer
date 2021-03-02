@@ -14,6 +14,7 @@ rl_columns = ['id', 'notebook_id', 'notebook_code', 'code', 'exe_date', 'exe_tim
 
 
 class SQLiteDbProvider(DatabaseProvider):
+
     def __init__(self, config: dict = {}, log: any = None):
         super().__init__(log)
         self.DATABASE_FOLDER = config.get('folder', path.dirname(path.dirname(path.abspath(__file__))))
@@ -129,3 +130,12 @@ class SQLiteDbProvider(DatabaseProvider):
             result.append(self.convert_row_map(row, rl_columns))
 
         return result
+
+    def get_notebook_last_run_log(self, notebook_id: int):
+        result = []
+        cursor = self.conn.cursor()
+        res = cursor.execute("SELECT * FROM run_log where notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, 1])
+        for row in res:
+            return self.convert_row_map(row, rl_columns)
+
+        return None

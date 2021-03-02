@@ -86,7 +86,8 @@ class JobRunner(threading.Thread):
 
     def remove_job(self, code):
         schedule.clear(code)
-        del self.job_list[code]
+        if self.job_list.get(code, None) is not None:
+            del self.job_list[code]
 
     def run(self):
         while True:

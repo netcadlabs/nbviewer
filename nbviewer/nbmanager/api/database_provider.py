@@ -38,6 +38,10 @@ class DatabaseProvider(ABC):
     def get_notebook_run_logs(self, notebook_id: int):
         pass
 
+    @abstractmethod
+    def get_notebook_last_run_log(self,notebook_id: int):
+        pass
+
     def convert_row_map(self, row, column_order):
         index = 0
         result = {}
