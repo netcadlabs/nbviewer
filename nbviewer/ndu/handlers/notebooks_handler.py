@@ -27,6 +27,7 @@ class NotebooksHandler(NDUBaseHandler):
             text=self.frontpage_setup.get("text", None),
             show_input=self.frontpage_setup.get("show_input", True),
             notebooks=notebooks,
+            is_authenticated=True,
             **other
         )
 
