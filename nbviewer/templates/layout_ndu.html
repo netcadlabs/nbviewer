@@ -1,7 +1,7 @@
 {% macro head_text(url, name, bold=False, onclick='') -%}
 <li>
     <a href="{{ from_base(url) }}" title="{{name}}" {%if download %}download{% endif %}
-        {%if onclick %}onclick="{{onclick}}"{% endif %} >
+       {%if onclick %}onclick="{{onclick}}" {% endif %}>
         {% if bold %}<strong>{% endif %}
         <span>{{name}}</span>
         {% if bold %}</strong>{% endif %}
@@ -72,7 +72,7 @@
 
 <body class="nbviewer">
 <script src="{{ static_url('components/jquery/dist/jquery.min.js') }}"></script>
-<script src="{{ static_url('components/requirejs/require.js') }}"></script>
+<!--<script src="{{ static_url('components/requirejs/require.js') }}"></script>-->
 <script src="{{ static_url('components/moment/min/moment.min.js') }}"></script>
 
 <nav id="menubar" class="navbar navbar-default navbar-fixed-top" data-spy="affix">
@@ -91,7 +91,7 @@
             <ul class="nav navbar-nav navbar-right">
                 {{ head_text(from_base('/notebooks'), "Notebooks") }}
                 {% if is_authenticated %}
-                 {{ head_text(from_base('/notebooks'), "Logout", onclick='logoutUser()') }}
+                {{ head_text(from_base('/notebooks'), "Logout", onclick='logoutUser()') }}
                 {% endif %}
                 {{ head_text(from_base('/faq'), "FAQ") }}
 
@@ -155,7 +155,7 @@
 </footer>
 {% endblock footer %}
 
-<script src="{{ static_url('components /bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ static_url('components/bootstrap/js/bootstrap.min.js') }}"></script>
 <script src="{{ static_url('components/headroom.js/dist/headroom.min.js') }}"></script>
 <script src="{{ static_url('components/headroom.js/dist/jQuery.headroom.min.js') }}"></script>
 
@@ -171,6 +171,7 @@
        {'storage': 'none'});
     ga('set', 'anonymizeIp', true);
     ga('send', 'pageview');
+
 
 </script>
 {% endif %}
@@ -196,7 +197,6 @@
         location.reload();
         e.preventDefault();
     }
-
 
 </script>
 

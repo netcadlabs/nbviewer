@@ -21,37 +21,84 @@ function showErrorDetailModal(e) {
     $('#errorDetailModal').modal()
 }
 
+
+var selectedOutputs = [];
+
+function onCompare(){
+    if(selectedOutputs.length == 2){
+        var url = "/outputs/?output_codes="  + selectedOutputs.join(',') + "&action=compare";
+        var win = window.open(url, '_blank');
+        win.focus();
+    }
+}
+
 function showRunDetailModal(e) {
     var code = $(e).attr('data-code');
-//    var detail = $(e).attr('data-error');
-//    $('#run-details').text(detail);
     $('#runDetailModal').modal()
-    $('#run_logs_table').empty();
-    $.ajax({
-            url: '/notebooks/?code=' + code + '&action=run_logs',
-            type: 'GET'
-        }).done(function (res) {
-            console.log("delete success");
-            //TODO - use data table?
-            if(res && res.data){
-                for(var i = 0 ; i < res.data.length; i++){
-                    item = res.data[i];
-                    html = '<tr>';
-                    html += `<th>${item['id']}</th>`;
-                    html += `<td>${item['exe_date']}</td>`;
-                     html += `<td>${item['exe_time']}</td>`;
-                     if(item['error'])
-                        html += `<td>ERROR</td>`;
-                     else
-                        html += `<td>OK</td>`;
 
-                     $('#run_logs_table').append(html)
-                }
+    $('#run_logs_table').DataTable({
+        processing: true,
+        ajax: '/notebooks/?code=' + code + '&action=run_logs&limit=100',
+        columns: [
+            {
+                data: 'id',
+                render: function ( data, type, row, meta ) {
+                  return `<input data-id="${data}" class="output-row" type="checkbox" />`;
+                },
+                "orderable": false
+            },
+            {
+                data: 'id'
+            },
+            {
+                data: "exe_date"
+            },
+            {
+                data: "exe_time"
+            },
+            {
+                data: "error"
             }
-        })
-        .fail(function () {
+        ]
+    });
 
-        });
+        $('#run_logs_table').on('click', '.output-row', function (e) {
+            var id = $(this).attr('data-id');
+
+            var index = selectedOutputs.indexOf(id)
+            if(index !== -1){
+                selectedOutputs.splice( index, 1 );
+                 $("#output_compare").hide()
+                return;
+            }
+
+            if(selectedOutputs.length == 2){
+                e.preventDefault();
+                return;
+            }
+
+            selectedOutputs.push( id );
+
+            console.log(selectedOutputs);
+
+            if(selectedOutputs.length == 2){
+                 $("#output_compare").show()
+            }else{
+                $("#output_compare").hide()
+            }
+//            var index = $.inArray(id, selectedOutputs);
+//
+//            if(selectedOutputs.length == 2){
+//                selectedOutputs.pop();
+//            }
+//            if ( index === -1 ) {
+//                selectedOutputs.push( id );
+//            } else {
+//                selectedOutputs.splice( index, 1 );
+//            }
+
+//            $(this).toggleClass('selected');
+        } );
 }
 
 function deleteNb(code) {
@@ -107,17 +154,15 @@ function changeIntervalType(target) {
     $('#interval-every').hide();
     $('#interval-each').hide();
     $('#interval-' + type).show();
-
     //    console.log($(target).val())
 }
 
 function changeCronState(target) {
-    if(target.checked)
+    if (target.checked)
         $('#cron-inputs').slideDown();
     else
         $('#cron-inputs').slideUp();
 }
-
 
 function copyTextToClipboard(elem, text) {
     if (!validURL(text))
@@ -129,7 +174,7 @@ function copyTextToClipboard(elem, text) {
     var result = document.execCommand('copy');
     document.body.removeChild(input);
 
-    setTimeout(function(){
+    setTimeout(function () {
         $(elem).popover('hide');
     }, 1500)
 }

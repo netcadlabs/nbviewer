@@ -218,21 +218,32 @@
                 <h4 class="modal-title" id="runModalLabel">Notebook Run Details</h4>
             </div>
             <div class="modal-body">
-                <div>This table shows the last 15 run results.</div>
-                <table class="table table-hover" id="run_logs_table" data-toggle="table">
+                <div style="min-height:40px;display: flex;justify-content: space-between;">
+                    <div>This table shows the last 15 run results.</div>
+                    <div>
+                        <button id="output_compare"  type="button" class="btn btn-primary"style="display:none;"
+                                onclick="onCompare()">Compare
+                        </button>
+                    </div>
+                </div>
+                <table class="table table-hover" id="run_logs_table" style="width:100%">
                     <thead>
                     <tr>
-                        <th scope="col" data-field="id">#Id</th>
-                        <th scope="col" data-field="exe_date">Datetime</th>
-                        <th scope="col" data-field="exe_time">Execution Time (second)</th>
-                        <th scope="col" data-field="exe_error">Result</th>
+                        <th scope="col"></th>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Execution Time (second)</th>
+                        <th scope="col">Result</th>
                     </tr>
                     </thead>
-<!--                    <tbody id="run_logs_table">-->
-<!--                    </tbody>-->
                 </table>
+                <div>
+
+                </div>
             </div>
+
             <div class="modal-footer">
+
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -240,17 +251,18 @@
 </div>
 
 
-
 {% endblock body %}
 
 {% block extra_head %}
-    <link href="{{ static_url('components/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ static_url('components/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ static_url('components/datatables.net-select-bs/css/select.bootstrap.min.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_script %}
-    <script src="{{ static_url('components/datatables.net/js/jquery.dataTables.js') }}"></script>
-<!--    <script src="{{ static_url('components/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>-->
-    <script src="{{ static_url('js/notebooks.js') }}"></script>
+<script src="{{ static_url('components/datatables.net/js/jquery.dataTables.js') }}"></script>
+<script src="{{ static_url('components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+<script src="{{ static_url('components/datatables.net-select/js/dataTables.select.min.js') }}"></script>
+<script src="{{ static_url('js/notebooks.js') }}"></script>
 {% endblock %}
 
 
