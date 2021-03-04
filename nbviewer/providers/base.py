@@ -321,10 +321,10 @@ class BaseHandler(web.RequestHandler):
         return url_path_join(self.download_url_prefix, notebook['tenant_id'], notebook['code'] + '.ipynb')
 
     def notebook_output_url(self, notebook):
-        return url_path_join('/outputs', notebook['code'])
+        return url_path_join('/outputs?nb_code=' +  notebook['code'])
 
     def notebook_output_url_for_copy(self, notebook):
-        return url_path_join(self.base_url, '/outputs', notebook['code'])
+        return url_path_join(self.base_url, '/outputs?nb_code=' + notebook['code'])
 
     def breadcrumbs(self, path, base_url):
         """Generate a list of breadcrumbs"""

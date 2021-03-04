@@ -10,7 +10,7 @@ DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 nb_columns = ['id', 'tenant_id', 'code', 'name', 'desc', 'file_name', 'path',
               'c_date', 'exe_date', 'exe_count', 'cron', 'timeout', 'error']
 
-rl_columns = ['id', 'notebook_id', 'notebook_code', 'code', 'exe_date', 'exe_time', 'error']
+rl_columns = ['id', 'tenant_id', 'notebook_id', 'notebook_code', 'code', 'exe_date', 'exe_time', 'error']
 
 
 class SQLiteDbProvider(DatabaseProvider):
@@ -117,25 +117,49 @@ class SQLiteDbProvider(DatabaseProvider):
     def save_run_log(self, rl):
         cursor = self.conn.cursor()
         # created_date = datetime.now().strftime(DATETIME_FORMAT)
-        cursor.execute("INSERT INTO run_log(notebook_id, notebook_code, code, exe_date, exe_time, error) "
-                       "VALUES (?, ?, ?, ?, ?, ?)",
-                       (rl['notebook_id'], rl['notebook_code'], rl['code'], rl['exe_date'], rl['exe_time'], rl['error']))
+        cursor.execute("INSERT INTO run_log(tenant_id, notebook_id, notebook_code, code, exe_date, exe_time, error) "
+                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (rl['tenant_id'], rl['notebook_id'], rl['notebook_code'], rl['code'], rl['exe_date'], rl['exe_time'], rl['error']))
         self.conn.commit()
 
     def get_notebook_run_logs(self, notebook_id: int, limit: int = 15):
         result = []
         cursor = self.conn.cursor()
-        res = cursor.execute("SELECT * FROM run_log where notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, limit])
+        res = cursor.execute("SELECT * FROM run_log WHERE notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, limit])
         for row in res:
             result.append(self.convert_row_map(row, rl_columns))
 
         return result
 
     def get_notebook_last_run_log(self, notebook_id: int):
-        result = []
         cursor = self.conn.cursor()
-        res = cursor.execute("SELECT * FROM run_log where notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, 1])
+        res = cursor.execute("SELECT * FROM run_log WHERE notebook_id = ?  ORDER BY id DESC LIMIT ?", [notebook_id, 1])
         for row in res:
             return self.convert_row_map(row, rl_columns)
 
         return None
+
+    def get_run_log_by_code(self, output_code: int):
+        cursor = self.conn.cursor()
+        res = cursor.execute("SELECT * FROM run_log WHERE code = ?  ORDER BY id DESC LIMIT ?", [output_code, 1])
+        for row in res:
+            return self.convert_row_map(row, rl_columns)
+
+        return None
+
+    def get_run_log_by_id(self, run_log_id: int):
+        cursor = self.conn.cursor()
+        res = cursor.execute("SELECT * FROM run_log WHERE id = ?  ORDER BY id DESC LIMIT ?", [run_log_id, 1])
+        for row in res:
+            return self.convert_row_map(row, rl_columns)
+
+        return None
+
+    def get_run_log_by_ids(self, run_log_ids: list):
+        result = []
+        cursor = self.conn.cursor()
+        res = cursor.execute('SELECT * FROM run_log WHERE id IN ({0})'.format(','.join(['?' for c in run_log_ids])), run_log_ids)
+        for row in res:
+            result.append(self.convert_row_map(row, rl_columns))
+
+        return result

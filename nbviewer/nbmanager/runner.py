@@ -55,6 +55,7 @@ class NotebookRunner:
             error = 'Unknown error while running notebook!'
 
         run_log = {
+            'tenant_id': tenant_id,
             'notebook_id': notebook['id'],
             'notebook_code': code,
             'code': output_code,
@@ -94,7 +95,7 @@ class NotebookRunner:
                 command_args.extend(['--to', 'html'])
                 result = subprocess.check_output(command_args, stderr=STDOUT)
             else:
-                return False
+                return
         except CalledProcessError as err:
             if err.output:
                 error_detail = str(err.output.decode('UTF-8'))

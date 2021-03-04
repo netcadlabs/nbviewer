@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS notebook (
 
 CREATE TABLE IF NOT EXISTS run_log (
 	id integer PRIMARY KEY,
+	tenant_id text NOT NULL,
 	notebook_id int NOT NULL,
 	notebook_code text NOT NULL,
 	code text NOT NULL,

@@ -26,7 +26,7 @@ var selectedOutputs = [];
 
 function onCompare(){
     if(selectedOutputs.length == 2){
-        var url = "/outputs/?output_codes="  + selectedOutputs.join(',') + "&action=compare";
+        var url = "/outputs/?action=compare&output_ids=" + selectedOutputs.join(',');
         var win = window.open(url, '_blank');
         win.focus();
     }
@@ -57,7 +57,11 @@ function showRunDetailModal(e) {
                 data: "exe_time"
             },
             {
-                data: "error"
+                data: 'code',
+                render: function(data, type, row, meta){
+                    var url = `/outputs?code=${data}&action=show`
+                    return `<a target='_blank' href="${url}">Open</a>`;
+                }
             }
         ]
     });

@@ -39,7 +39,19 @@ class DatabaseProvider(ABC):
         pass
 
     @abstractmethod
-    def get_notebook_last_run_log(self,notebook_id: int):
+    def get_notebook_last_run_log(self, notebook_id: int):
+        pass
+
+    @abstractmethod
+    def get_run_log_by_code(self, run_log_code: str):
+        pass
+
+    @abstractmethod
+    def get_run_log_by_id(self, run_log_id: int):
+        pass
+
+    @abstractmethod
+    def get_run_log_by_ids(self, run_log_ids: list):
         pass
 
     def convert_row_map(self, row, column_order):
