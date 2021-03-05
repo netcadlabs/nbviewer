@@ -57,6 +57,7 @@ pkg_data = {
         + walk_subpkg("templates")
         + walk_subpkg("providers")
         + walk_subpkg("nbmanager")
+        + walk_subpkg("ndu")
     )
 }
 

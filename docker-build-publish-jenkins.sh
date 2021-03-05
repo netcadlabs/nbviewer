@@ -20,4 +20,8 @@ echo "Pushing new images to registry"
 
 docker push ${BUILD_NAME}:latest
 
+if [ "$REMOVE_LOCAL_IMAGES" == "true" ]; then
+  docker rmi ${BUILD_NAME}:${BUILD_TAG}
+fi
+
 docker logout

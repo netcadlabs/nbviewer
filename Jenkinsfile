@@ -4,6 +4,7 @@ pipeline {
         stage('docker-image-build-deploy') {
             environment {
                 DOCKER_USER = credentials('DOCKER_USER_CREDENTIALS')
+                REMOVE_LOCAL_IMAGES = 'true'
             }
             steps {
                 sh './docker-build-publish-jenkins.sh'
