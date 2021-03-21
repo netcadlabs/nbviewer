@@ -1,5 +1,6 @@
 import json
 
+import jwt
 import requests
 
 from nbviewer.ndu.handlers.ndu_base_handler import NDUBaseHandler
@@ -20,6 +21,21 @@ class LoginHandler(NDUBaseHandler):
         )
 
     def get(self, *path_args, **path_kwargs):
+        query_token = self.get_argument('token', None)
+        if query_token:
+            try:
+                result = jwt.decode(query_token, options={"verify_signature": False})
+                if 'TENANT_ADMIN' in result['scopes']:
+                    self.set_secure_cookie(self.token_cookie_name, query_token)
+                    self.redirect("/notebooks/")
+            except Exception as err:
+                print(err)
+        else:
+            current_user = self.check_token(redirect_login=False)
+            if current_user:
+                self.redirect("/notebooks")
+                return None
+
         result = self.render_login_template()
 
         self.finish(result)

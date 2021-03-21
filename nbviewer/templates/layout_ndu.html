@@ -92,6 +92,8 @@
                 {{ head_text(from_base('/notebooks'), "Notebooks") }}
                 {% if is_authenticated %}
                 {{ head_text(from_base('/notebooks'), "Logout", onclick='logoutUser()') }}
+                {% else %}
+                {{ head_text(from_base('/login'), "Login") }}
                 {% endif %}
                 {{ head_text(from_base('/faq'), "FAQ") }}
 
@@ -133,8 +135,8 @@
                 Hosted with <a target="_blank" href="https://docker.com">Docker</a>
             </p>
             <p>
-                Netcad Labs NBViewer GitHub <a target="_blank"
-                                               href="https://github.com/netcadlabs/nbviewer">repository</a>.
+                Netcad Labs NBViewer GitHub
+                <a target="_blank" href="https://github.com/netcadlabs/nbviewer">repository</a>.
             </p>
         </div>
 
@@ -173,6 +175,7 @@
     ga('send', 'pageview');
 
 
+
 </script>
 {% endif %}
 <script>
@@ -197,6 +200,7 @@
         location.reload();
         e.preventDefault();
     }
+
 
 </script>
 

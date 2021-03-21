@@ -19,10 +19,14 @@ class SQLiteDbProvider(DatabaseProvider):
         super().__init__(log)
         self.DATABASE_FOLDER = config.get('folder', path.dirname(path.dirname(path.abspath(__file__))))
         self.DB_FILE_NAME = config.get('file', 'notebooks.db')
+        self.DB_FILE_PATH = path.join(self.DATABASE_FOLDER, self.DB_FILE_NAME)
+
         self.log.info('DATABASE_FOLDER = %s' % self.DATABASE_FOLDER)
         self.log.info('DB_FILE_NAME = %s' % self.DB_FILE_NAME)
+        self.log.info('DB_FILE_PATH = %s' % self.DB_FILE_PATH)
+
         self.conn: sqlite3.Connection = None
-        self.__create_connection(path.join(self.DATABASE_FOLDER, self.DB_FILE_NAME))
+        self.__create_connection(self.DB_FILE_PATH)
 
         sql_file = path.join(path.dirname(path.abspath(__file__)), "db.sql")
         sql = None
@@ -52,7 +56,7 @@ class SQLiteDbProvider(DatabaseProvider):
             print(sqlite3.version)
         except sqlite3.Error as e:
             self.log.error("Failed to initialize sql lite connection : %s", e)
-            # print(e)
+            print(e)
 
     def save_notebook(self, nb):
         cursor = self.conn.cursor()

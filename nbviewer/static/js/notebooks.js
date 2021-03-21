@@ -24,8 +24,8 @@ function showErrorDetailModal(e) {
 
 var selectedOutputs = [];
 
-function onCompare(){
-    if(selectedOutputs.length == 2){
+function onCompare() {
+    if (selectedOutputs.length == 2) {
         var url = "/outputs/?action=compare&output_ids=" + selectedOutputs.join(',');
         var win = window.open(url, '_blank');
         win.focus();
@@ -38,12 +38,13 @@ function showRunDetailModal(e) {
 
     $('#run_logs_table').DataTable({
         processing: true,
+        destroy: true,
         ajax: '/notebooks/?code=' + code + '&action=run_logs&limit=100',
         columns: [
             {
                 data: 'id',
-                render: function ( data, type, row, meta ) {
-                  return `<input data-id="${data}" class="output-row" type="checkbox" />`;
+                render: function (data, type, row, meta) {
+                    return `<input data-id="${data}" class="output-row" type="checkbox" />`;
                 },
                 "orderable": false
             },
@@ -58,7 +59,7 @@ function showRunDetailModal(e) {
             },
             {
                 data: 'code',
-                render: function(data, type, row, meta){
+                render: function (data, type, row, meta) {
                     var url = `/outputs?code=${data}&action=show`
                     return `<a target='_blank' href="${url}">Open</a>`;
                 }
@@ -66,43 +67,43 @@ function showRunDetailModal(e) {
         ]
     });
 
-        $('#run_logs_table').on('click', '.output-row', function (e) {
-            var id = $(this).attr('data-id');
+    $('#run_logs_table').on('click', '.output-row', function (e) {
+        var id = $(this).attr('data-id');
 
-            var index = selectedOutputs.indexOf(id)
-            if(index !== -1){
-                selectedOutputs.splice( index, 1 );
-                 $("#output_compare").hide()
-                return;
-            }
+        var index = selectedOutputs.indexOf(id)
+        if (index !== -1) {
+            selectedOutputs.splice(index, 1);
+            $("#output_compare").hide()
+            return;
+        }
 
-            if(selectedOutputs.length == 2){
-                e.preventDefault();
-                return;
-            }
+        if (selectedOutputs.length == 2) {
+            e.preventDefault();
+            return;
+        }
 
-            selectedOutputs.push( id );
+        selectedOutputs.push(id);
 
-            console.log(selectedOutputs);
+        console.log(selectedOutputs);
 
-            if(selectedOutputs.length == 2){
-                 $("#output_compare").show()
-            }else{
-                $("#output_compare").hide()
-            }
-//            var index = $.inArray(id, selectedOutputs);
-//
-//            if(selectedOutputs.length == 2){
-//                selectedOutputs.pop();
-//            }
-//            if ( index === -1 ) {
-//                selectedOutputs.push( id );
-//            } else {
-//                selectedOutputs.splice( index, 1 );
-//            }
+        if (selectedOutputs.length == 2) {
+            $("#output_compare").show()
+        } else {
+            $("#output_compare").hide()
+        }
+        //            var index = $.inArray(id, selectedOutputs);
+        //
+        //            if(selectedOutputs.length == 2){
+        //                selectedOutputs.pop();
+        //            }
+        //            if ( index === -1 ) {
+        //                selectedOutputs.push( id );
+        //            } else {
+        //                selectedOutputs.splice( index, 1 );
+        //            }
 
-//            $(this).toggleClass('selected');
-        } );
+        //            $(this).toggleClass('selected');
+    });
 }
 
 function deleteNb(code) {

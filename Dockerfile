@@ -57,5 +57,7 @@ WORKDIR /srv/nbviewer
 RUN useradd appuser && chown -R appuser /srv/nbviewer
 USER appuser
 
+ENV MPLCONFIGDIR /srv/nbviewer/data
+
 EXPOSE 5000
 CMD ["python", "-m", "nbviewer", "--port=5000"]

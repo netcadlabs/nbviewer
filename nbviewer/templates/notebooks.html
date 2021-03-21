@@ -221,7 +221,7 @@
                 <div style="min-height:40px;display: flex;justify-content: space-between;">
                     <div>This table shows the last 15 run results.</div>
                     <div>
-                        <button id="output_compare"  type="button" class="btn btn-primary"style="display:none;"
+                        <button id="output_compare" type="button" class="btn btn-primary" style="display:none;"
                                 onclick="onCompare()">Compare
                         </button>
                     </div>
@@ -256,12 +256,15 @@
 {% block extra_head %}
 <link href="{{ static_url('components/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ static_url('components/datatables.net-select-bs/css/select.bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ static_url('components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_script %}
-<script src="{{ static_url('components/datatables.net/js/jquery.dataTables.js') }}"></script>
+<script src="{{ static_url('components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ static_url('components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
 <script src="{{ static_url('components/datatables.net-select/js/dataTables.select.min.js') }}"></script>
+
+dataTables.bootstrap.min.js
 <script src="{{ static_url('js/notebooks.js') }}"></script>
 {% endblock %}
 

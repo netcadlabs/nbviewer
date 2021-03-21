@@ -11,11 +11,15 @@ class NDUBaseHandler(BaseHandler):
     def token_cookie_name(self):
         return 'token'
 
+    def is_authenticated(self):
+        return self.check_token(False) is not None
+
     def check_token(self, redirect_login: bool = True) -> any:
         token = self.get_secure_cookie(self.token_cookie_name)
 
-        if not token and redirect_login:
-            self.redirect("/login")
+        if not token:
+            if redirect_login:
+                self.redirect("/login")
             return None
 
         # jwt.decode(token, "secret", algorithms=["HS256"])
