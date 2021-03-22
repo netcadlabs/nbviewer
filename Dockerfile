@@ -46,6 +46,7 @@ RUN python3 -mpip install --no-cache /wheels/*
 
 ENV NB_DATA_FOLDER /srv/nbviewer/data
 ENV CRON_USERNAME appuser
+ENV MPLCONFIGDIR /srv/nbviewer/data
 
 # To change the number of threads use
 # docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
@@ -56,8 +57,6 @@ WORKDIR /srv/nbviewer
 # Switches to a non-root user and changes the ownership of the /app folder"
 RUN useradd appuser && chown -R appuser /srv/nbviewer
 USER appuser
-
-ENV MPLCONFIGDIR /srv/nbviewer/data
 
 EXPOSE 5000
 CMD ["python", "-m", "nbviewer", "--port=5000"]
