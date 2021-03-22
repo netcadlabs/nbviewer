@@ -29,8 +29,10 @@ RUN python3 setup.py build && \
 FROM python:3.7-slim-buster
 LABEL maintainer="Netcad Innovation Labs <netcadinnovationlabs@gmail.com>"
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG=C.UTF-8
+# To change the number of threads use
+# docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
+ENV NBVIEWER_THREADS=2 NB_DATA_FOLDER=/srv/nbviewer/data CRON_USERNAME=appuser MPLCONFIGDIR=/srv/nbviewer/data
 
 RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
@@ -40,17 +42,9 @@ RUN apt-get update \
     cron \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
 COPY --from=builder /wheels /wheels
 RUN python3 -mpip install --no-cache /wheels/*
 
-ENV NB_DATA_FOLDER /srv/nbviewer/data
-ENV CRON_USERNAME appuser
-ENV MPLCONFIGDIR /srv/nbviewer/data
-
-# To change the number of threads use
-# docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
-ENV NBVIEWER_THREADS 2
 WORKDIR /srv/nbviewer
 #USER nobody
 
