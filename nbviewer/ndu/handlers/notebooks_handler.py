@@ -27,7 +27,7 @@ class NotebooksHandler(NDUBaseHandler):
             text=self.frontpage_setup.get("text", None),
             show_input=self.frontpage_setup.get("show_input", True),
             notebooks=notebooks,
-            is_authenticated=True,
+            is_authenticated=self.is_authenticated(),
             **other
         )
 
@@ -91,6 +91,7 @@ class NotebooksHandler(NDUBaseHandler):
             curr_user = self.check_token()
             tenant_id = curr_user['tenantId']
 
+            self.log.info("Start notebook upload...")
             if self.request.files is not None and self.request.files['file'] is not None \
                     and len(self.request.files['file']) > 0:
                 file = self.request.files['file'][0]
@@ -112,6 +113,7 @@ class NotebooksHandler(NDUBaseHandler):
 
                 result = file_manager.save_notebook_file(tenant_id, file)
                 if result is not None:
+                    self.log.info("Notebook file saved")
                     notebook = {
                         'tenant_id': tenant_id,
                         'code': result['code'],
@@ -126,12 +128,16 @@ class NotebooksHandler(NDUBaseHandler):
                     notebook = DatabaseInstance.get().get_notebook_by_code(notebook['code'])
 
                     if run == 'on':
+                        self.log.info("Running uploaded notebook file...")
                         notebook_runner = NotebookRunner()
                         await notebook_runner.run_w(notebook)
 
                     SchedulerInstance.get().add_notebook_job(notebook)
+                else:
+                    self.log.info("Can not save notebook file...")
 
         except Exception as e:
+            self.log.warn("Notebook upload error =%s", e)
             print(e)
 
         notebooks = self.__get_notebooks(tenant_id)

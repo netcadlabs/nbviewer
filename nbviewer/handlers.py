@@ -6,6 +6,7 @@
 # -----------------------------------------------------------------------------
 from tornado import web
 
+from .ndu.handlers.ndu_base_handler import NDUBaseHandler
 from .providers import _load_handler_from_location
 from .providers import provider_handlers
 from .providers import provider_uri_rewrites
@@ -20,7 +21,7 @@ from .utils import url_path_join
 # -----------------------------------------------------------------------------
 
 
-class Custom404(BaseHandler):
+class Custom404(NDUBaseHandler):
     """Render our 404 template"""
 
     def prepare(self):
@@ -28,7 +29,7 @@ class Custom404(BaseHandler):
         raise web.HTTPError(404)
 
 
-class IndexHandler(BaseHandler):
+class IndexHandler(NDUBaseHandler):
     """Render the index"""
 
     def render_index_template(self, **namespace):
@@ -39,7 +40,7 @@ class IndexHandler(BaseHandler):
             text=self.frontpage_setup.get("text", None),
             show_input=self.frontpage_setup.get("show_input", True),
             sections=self.frontpage_setup.get("sections", []),
-            is_authenticated=True,
+            is_authenticated=self.is_authenticated(),
             **namespace
         )
 
@@ -47,7 +48,7 @@ class IndexHandler(BaseHandler):
         self.finish(self.render_index_template())
 
 
-class FAQHandler(BaseHandler):
+class FAQHandler(NDUBaseHandler):
     """Render the markdown FAQ page"""
 
     def get(self):

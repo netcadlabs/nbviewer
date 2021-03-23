@@ -30,6 +30,7 @@ class DownloadHandler(NDUBaseHandler):
             self.set_header('Content-Type', 'application/octet-stream')
             self.set_header('Content-Disposition', 'attachment; filename=' + notebook['file_name'])
             self.write(content)
+            self.finish()
         except FileNotFoundError as fne:
             self.set_status(404)
             self.finish(self.render_template("output_not_found.html", message=str(fne)))

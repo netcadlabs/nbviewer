@@ -32,14 +32,13 @@ LABEL maintainer="Netcad Innovation Labs <netcadinnovationlabs@gmail.com>"
 # To change the number of threads use
 # docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
-ENV NBVIEWER_THREADS=2 NB_DATA_FOLDER=/srv/nbviewer/data CRON_USERNAME=appuser MPLCONFIGDIR=/srv/nbviewer/data
+ENV NBVIEWER_THREADS=2 NB_DATA_FOLDER=/var/nbviewer/data CRON_USERNAME=appuser MPLCONFIGDIR=/srv/nbviewer/data
 
 RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
     ca-certificates \
     libcurl4 \
     git \
-    cron \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /wheels /wheels
@@ -49,7 +48,8 @@ WORKDIR /srv/nbviewer
 #USER nobody
 
 # Switches to a non-root user and changes the ownership of the /app folder"
-RUN useradd appuser && chown -R appuser /srv/nbviewer
+RUN mkdir -p /var/nbviewer
+RUN useradd appuser && chown -R appuser /srv/nbviewer && chown -R appuser /var/nbviewer
 USER appuser
 
 EXPOSE 5000

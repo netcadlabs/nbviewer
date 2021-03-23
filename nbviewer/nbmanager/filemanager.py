@@ -1,4 +1,5 @@
 import os
+import pwd
 import shutil
 import uuid
 from os import path
@@ -10,6 +11,9 @@ except ImportError:
 
 
 # import imgkit
+def get_username():
+    return pwd.getpwuid(os.getuid())[0]
+
 
 def check_folder(folder: str):
     try:
@@ -38,10 +42,22 @@ class FileManager:
     def get_data_folder(self):
         NB_DATA_FOLDER = os.getenv('NB_DATA_FOLDER', DEFAULT_FOLDER)
         if not check_folder(NB_DATA_FOLDER):
+            self.__log_debug('data folder going to created : {}'.format(NB_DATA_FOLDER), is_info=True)
             NB_DATA_FOLDER = DEFAULT_FOLDER
             check_folder(NB_DATA_FOLDER)
 
         return NB_DATA_FOLDER
+
+    def __log_error(self, message: str):
+        if self.log:
+            self.log.error(message)
+
+    def __log_debug(self, message: str, is_info: bool = False):
+        if self.log:
+            if is_info:
+                self.log.info(message)
+            else:
+                self.log.debug(message)
 
     def __init__(self, log):
         self.log = log
@@ -53,14 +69,30 @@ class FileManager:
         else:
             FileManager.__instance = self
 
+        self.__log_debug('Current user {}'.format(get_username()), is_info=True)
+
+        if not os.path.isdir(self.notebooks_folder):
+            self.__log_debug('Creating notebooks folder : {}'.format(self.notebooks_folder), is_info=True)
+            check_folder(self.notebooks_folder)
+
     def __create_notebook_folder(self, tenant_id, notebook_code):
-        tenant_folder = path.join(self.notebooks_folder, tenant_id, notebook_code)
-        check_folder(tenant_folder)
+        tenant_folder = path.join(self.notebooks_folder, tenant_id)
 
-        outputs_folder = path.join(tenant_folder, 'outputs')
-        check_folder(outputs_folder)
+        if not os.path.isdir(tenant_folder):
+            self.__log_debug('Creating tenant folder : {}'.format(tenant_folder), is_info=True)
+            check_folder(tenant_folder)
 
-        return tenant_folder;
+        tenant_notebooks_folder = path.join(tenant_folder, notebook_code)
+        if not os.path.isdir(tenant_notebooks_folder):
+            self.__log_debug('Creating tenant notebook folder : {}'.format(tenant_notebooks_folder), is_info=True)
+            check_folder(tenant_notebooks_folder)
+
+        outputs_folder = path.join(tenant_notebooks_folder, 'outputs')
+        if not os.path.isdir(outputs_folder):
+            self.__log_debug('Creating tenant notebook output folder : {}'.format(outputs_folder), is_info=True)
+            check_folder(outputs_folder)
+
+        return tenant_notebooks_folder
 
     def delete_notebook_file(self, tenant_id: str, code: str):
         notebook_folder = path.join(self.notebooks_folder, tenant_id, code)
@@ -92,6 +124,7 @@ class FileManager:
         with open(file_path, 'wb') as output_file:
             output_file.write(file['body'])
 
+        self.__log_debug('notebook file saved!', is_info=True)
         return {
             'result': True,
             'code': notebook_code,

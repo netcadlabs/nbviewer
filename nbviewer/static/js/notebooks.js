@@ -35,7 +35,6 @@ function onCompare() {
 function showRunDetailModal(e) {
     var code = $(e).attr('data-code');
     $('#runDetailModal').modal()
-
     $('#run_logs_table').DataTable({
         processing: true,
         destroy: true,
@@ -67,6 +66,9 @@ function showRunDetailModal(e) {
         ]
     });
 
+    $("#output_compare").hide()
+    selectedOutputs = [];
+
     $('#run_logs_table').on('click', '.output-row', function (e) {
         var id = $(this).attr('data-id');
 
@@ -83,26 +85,11 @@ function showRunDetailModal(e) {
         }
 
         selectedOutputs.push(id);
-
-        console.log(selectedOutputs);
-
         if (selectedOutputs.length == 2) {
             $("#output_compare").show()
         } else {
             $("#output_compare").hide()
         }
-        //            var index = $.inArray(id, selectedOutputs);
-        //
-        //            if(selectedOutputs.length == 2){
-        //                selectedOutputs.pop();
-        //            }
-        //            if ( index === -1 ) {
-        //                selectedOutputs.push( id );
-        //            } else {
-        //                selectedOutputs.splice( index, 1 );
-        //            }
-
-        //            $(this).toggleClass('selected');
     });
 }
 
