@@ -167,3 +167,8 @@ class SQLiteDbProvider(DatabaseProvider):
             result.append(self.convert_row_map(row, rl_columns))
 
         return result
+
+    def delete_run_logs_by_notebook_code(self, notebook_code):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM run_log WHERE notebook_code = ?", [notebook_code])
+        self.conn.commit()

@@ -23,6 +23,8 @@ function showErrorDetailModal(e) {
 
 
 var selectedOutputs = [];
+var selectedNotebookCode = null;
+var outputTable = null;
 
 function onCompare() {
     if (selectedOutputs.length == 2) {
@@ -32,10 +34,32 @@ function onCompare() {
     }
 }
 
+function onOutputClear(){
+    if(!selectedNotebookCode)
+        return;
+    
+    var question = confirm('Are you sure to delete all outputs of this notebook?');
+
+    if (question) {
+        $.ajax({
+            url: '/outputs/?code=' + selectedNotebookCode + '&action=delete',
+            type: 'DELETE'
+        }).done(function () {
+            console.log("delete notebook outputs success");
+            $('#runDetailModal').modal('hide')
+        })
+        .fail(function () {
+            console.error("delete notebook outputs failed");
+        });
+    }
+}
+
 function showRunDetailModal(e) {
     var code = $(e).attr('data-code');
+    selectedNotebookCode = code;
+
     $('#runDetailModal').modal()
-    $('#run_logs_table').DataTable({
+    outputTable = $('#run_logs_table').DataTable({
         processing: true,
         destroy: true,
         ajax: '/notebooks/?code=' + code + '&action=run_logs&limit=100',
@@ -65,6 +89,12 @@ function showRunDetailModal(e) {
             }
         ]
     });
+
+    outputTable.on( 'draw', function () {
+        if(outputTable && outputTable.rows().count()){
+            $("#output_clear").show()
+        }
+    } );
 
     $("#output_compare").hide()
     selectedOutputs = [];

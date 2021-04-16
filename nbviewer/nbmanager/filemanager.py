@@ -187,3 +187,8 @@ class FileManager:
             print('cant create preview')
 
         return None
+
+    def delete_notebook_outputs(self, tenant_id, notebook_code):
+        notebook_output_folder = path.join(self.notebooks_folder, tenant_id, notebook_code, 'outputs')
+        if os.path.isdir(notebook_output_folder):
+            shutil.rmtree(notebook_output_folder)

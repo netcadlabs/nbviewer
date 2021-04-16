@@ -40,6 +40,24 @@ class NotebookHtmlOutputHandler(NDUBaseHandler):
             self.set_status(404)
             self.finish(self.render_template("output_not_found.html", message=str(fne)))
 
+    def delete(self, *path_args, **path_kwargs):
+        notebook_code = self.get_argument('code', None)
+        action = self.get_argument('action', 'delete')
+
+        try:
+            notebook = DatabaseInstance.get().get_notebook_by_code(notebook_code)
+            if not notebook:
+                raise NotebookNotFoundError('Not valid notebook code')
+
+            if action == 'delete':
+                delete_notebook_output_files(notebook['tenant_id'], notebook_code)
+                delete_notebook_output_records(notebook_code)
+            else:
+                self.finish('Not valid action')
+        except Exception as e:
+            self.set_status(404)
+            self.finish("")
+
     def render_latest_output(self, notebook_code, hide_inputs=True):
         database = DatabaseInstance.get()
         notebook = database.get_notebook_by_code(notebook_code)
@@ -131,3 +149,19 @@ class NotebookHtmlOutputHandler(NDUBaseHandler):
         detail_html = "<div style='color:red;'>{} - {} </div>".format(run_log['id'], run_log['code'])
         detail_tag = BeautifulSoup(detail_html, 'html.parser')
         return detail_tag
+
+
+def delete_notebook_output_files(tenant_id, notebook_code):
+    try:
+        FileManager.get_instance().delete_notebook_outputs(tenant_id, notebook_code)
+    except Exception as e:
+        print(e)
+        print("can not delete notebook output files!")
+
+
+def delete_notebook_output_records(notebook_code):
+    try:
+        DatabaseInstance.get().delete_run_logs_by_notebook_code(notebook_code)
+    except Exception as e:
+        print(e)
+        print("can not delete notebook run logs from db!")

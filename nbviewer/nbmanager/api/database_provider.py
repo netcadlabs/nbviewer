@@ -54,6 +54,10 @@ class DatabaseProvider(ABC):
     def get_run_log_by_ids(self, run_log_ids: list):
         pass
 
+    @abstractmethod
+    def delete_run_logs_by_notebook_code(self, notebook_code):
+        pass
+
     def convert_row_map(self, row, column_order):
         index = 0
         result = {}
