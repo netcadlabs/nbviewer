@@ -11,85 +11,87 @@
 <section>
     <table class="table table-hover">
         <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">File Name</th>
-                <th scope="col">Preview</th>
-                <th scope="col">Description</th>
-                <th scope="col">Status</th>
-                <th scope="col">Last Run</th>
-                <th scope="col"></th>
-            </tr>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">File Name</th>
+            <th scope="col">Preview</th>
+            <th scope="col">Description</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last Run</th>
+            <th scope="col"></th>
+        </tr>
         </thead>
         <tbody>
-            {% for notebook in notebooks %}
-            <tr id="nb-{{notebook.code}}">
-                <th scope="row">{{notebook.id}}</th>
-                <td>{{notebook.name}}</td>
-                <td>
-                    <i class="fa fa-download"></i>
-                    <a target="_blank" href="{{ notebook_download_url(notebook) }}">{{notebook.file_name}}</a>
-                </td>
-                <td>
-                    {% if notebook.exe_date %}
-                    <a class="thumbnail nb-thumbnail-table" href="{{ notebook_output_url(notebook) }}&hide-inputs=True"
-                        target="_blank">
-                        <!--<img src="{{ static_url(notebook.preview_img) }}"/>-->
-                    </a>
-                    {% endif %}
+        {% for notebook in notebooks %}
+        <tr id="nb-{{notebook.code}}">
+            <th scope="row">{{notebook.id}}</th>
+            <td>{{notebook.name}}</td>
+            <td>
+                <i class="fa fa-download"></i>
+                <a target="_blank" href="{{ notebook_download_url(notebook) }}">{{notebook.file_name}}</a>
+            </td>
+            <td>
+                {% if notebook.exe_date %}
+                <a class="thumbnail nb-thumbnail-table" href="{{ notebook_output_url(notebook) }}&hide-inputs=True"
+                   target="_blank">
+                    <!--<img src="{{ static_url(notebook.preview_img) }}"/>-->
+                </a>
+                {% endif %}
 
-                </td>
-                <td>{{notebook.desc}}</td>
-                <td class="nb-status-col">
-                    {% if notebook.error %}
-                    <button class="btn btn-sm btn-danger" onclick="showErrorDetailModal(this)"
+            </td>
+            <td>{{notebook.desc}}</td>
+            <td class="nb-status-col">
+                {% if notebook.error %}
+                <button class="btn btn-sm btn-danger" onclick="showErrorDetailModal(this)"
                         data-code="{{notebook.code}}" data-error="{{notebook.error}}">
-                        <i class="fa fa-exclamation-circle"></i>
-                    </button>
-                    {% else %}
-                    {% if notebook.exe_date %}
-                    <button class="btn btn-sm btn-success danger" data-code="{{notebook.code}}"
+                    <i class="fa fa-exclamation-circle"></i>
+                </button>
+                {% else %}
+                {% if notebook.exe_date %}
+                <button class="btn btn-sm btn-success danger" data-code="{{notebook.code}}"
                         onclick="showRunDetailModal(this)">
-                        <i class="fa fa-check-circle"></i>
+                    <i class="fa fa-check-circle"></i>
+                </button>
+                {% endif %}
+                {% endif %}
+            </td>
+            <td class="nb-exe-date-col">
+                {% if notebook.exe_date %}
+                {{notebook.exe_date}}
+                {% endif %}
+            </td>
+            <td class="nb-controls-col">
+                <div class="nb-controls">
+                    <button class="btn btn-success" onclick="runNb('{{notebook.code}}')">
+                        <i class="fa fa-play"></i>
                     </button>
-                    {% endif %}
-                    {% endif %}
-                </td>
-                <td class="nb-exe-date-col">
-                    {% if notebook.exe_date %}
-                    {{notebook.exe_date}}
-                    {% endif %}
-                </td>
-                <td class="nb-controls-col">
-                    <div class="nb-controls">
-                        <button class="btn btn-success" onclick="runNb('{{notebook.code}}')">
-                            <i class="fa fa-play"></i>
-                        </button>
-                        <button class="btn btn-info" onclick="editNb('{{notebook.code}}')">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="btn btn-warning" onclick="updateNb('{{notebook.code}}')">
-                            <i class="fa fa-upload"></i>
-                        </button>
-                        <button class="btn btn-danger nb-delete" onclick="deleteNb('{{notebook.code}}')">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                        <button class="btn btn-primary"
+                    <button class="btn btn-info" onclick="editNb('{{notebook.code}}')">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-warning" onclick="updateNb('{{notebook.code}}')">
+                        <i class="fa fa-upload"></i>
+                    </button>
+                    <button class="btn btn-danger nb-delete" onclick="deleteNb('{{notebook.code}}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <button class="btn btn-primary"
                             onclick="copyTextToClipboard(this, '{{notebook_output_url_for_copy(notebook)}}')"
                             data-container="body" data-toggle="popover" data-placement="top"
                             data-content="Notebook latest output url copied to clipboard.">
-                            <i class="fa fa-copy"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
+                        <i class="fa fa-copy"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
 
         </tbody>
     </table>
 </section>
-<div class="modal" tabindex="-1" role="dialog" id="uploadModal">
+
+
+<div class="modal" tabindex="-1" role="dialog" id="uploadModal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -100,7 +102,7 @@
             </div>
             <div class="modal-body">
                 <form id="nb-form" class="upload-form" enctype="multipart/form-data" method="post"
-                    action="{{ from_base('/notebooks/') }}">
+                      action="{{ from_base('/notebooks/') }}">
                     <div class="form-group">
                         <label for="name">Name</label>
                         <input type="text" class="form-control" id="name" name="name" required></input>
@@ -127,7 +129,7 @@
                         <div class="form-group col-md-4 col-np">
                             <label for="interval_type">Interval Type</label>
                             <select id="interval_type" name="interval_type" class="form-control"
-                                onchange="changeIntervalType(this)">
+                                    onchange="changeIntervalType(this)">
                                 <option value="every" selected>Every</option>
                                 <option value="each">Each</option>
                             </select>
@@ -137,7 +139,7 @@
                                 <!-- Starting 'Run Interval' second/minute/hour/day/week from now-->
                                 <label for="every_interval">Run Interval</label>
                                 <input type="number" class="form-control" id="every_interval" name="every_interval"
-                                    value="1" />
+                                       value="1"/>
                             </div>
                             <div class="form-group col-md-4 col-np">
                                 <label for="every_type">Type</label>
@@ -169,7 +171,7 @@
                     <div class="form-group">
                         <label for="timeout">Run timeout for each cell(in second)</label>
                         <input type="number" min="1" max="600" class="form-control" id="timeout" name="timeout"
-                            value="5"></input>
+                               value="5"></input>
                     </div>
                     <div class="checkbox">
                         <label>
@@ -193,7 +195,38 @@
     </div>
 </div>
 
-<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+<div class="modal" tabindex="-1" role="dialog" id="updateNotebookModal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Notebook</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="nb-form-2" class="upload-form" enctype="multipart/form-data" method="post"
+                      action="{{ from_base('/notebook-update/') }}">
+                    <div class="form-group">
+                        <input class="form-control" id="update-file" type="file" name="file" accept=".ipynb" required>
+                        <span class="input-group-btn">
+                        </span>
+                        <input type="hidden" id="update_notebook_code" name="code" required></input>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('nb-form-2').submit();">
+                    Upload
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog  modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -206,13 +239,18 @@
                 <pre id="error-details"></pre>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-danger" style="float: left;"
+                        onclick="onOutputClear()">
+                    <i class="fa fa-trash"></i> Clear All Outputs
+                </button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="runDetailModal" tabindex="-1" role="dialog" aria-labelledby="runModalLabel">
+<div class="modal fade" id="runDetailModal" tabindex="-1" role="dialog" aria-labelledby="runModalLabel"
+     data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog  modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -225,34 +263,32 @@
                 <div style="min-height:40px;display: flex;justify-content: space-between;">
                     <div>This table shows the last 15 run results.</div>
                     <div>
-                        <button id="output_clear" type="button" class="btn btn-primary" style="display:none;"
-                            onclick="onOutputClear()">
-                            <i class="fa fa-trash"></i> Clear Outputs
-                        </button>
                         <button id="output_compare" type="button" class="btn btn-primary" style="display:none;"
-                            onclick="onCompare()">
-                            <i class="fa fa-trash"></i> Compare
+                                onclick="onCompare()">
+                            <i class="fa fa-columns"></i> Compare
                         </button>
                     </div>
                 </div>
                 <table class="table table-hover" id="run_logs_table" style="width:100%">
                     <thead>
-                        <tr>
-                            <th scope="col"></th>
-                            <th scope="col">#Id</th>
-                            <th scope="col">Datetime</th>
-                            <th scope="col">Execution Time (second)</th>
-                            <th scope="col">Result</th>
-                        </tr>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Execution Time (second)</th>
+                        <th scope="col">Result</th>
+                    </tr>
                     </thead>
                 </table>
                 <div>
 
                 </div>
             </div>
-
             <div class="modal-footer">
-
+                <button id="output_clear" type="button" class="btn btn-danger" style="display:none;float: left;"
+                        onclick="onOutputClear()">
+                    <i class="fa fa-trash"></i> Clear All Outputs
+                </button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>

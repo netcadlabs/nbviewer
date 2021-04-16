@@ -75,7 +75,7 @@ class FileManager:
             self.__log_debug('Creating notebooks folder : {}'.format(self.notebooks_folder), is_info=True)
             check_folder(self.notebooks_folder)
 
-    def __create_notebook_folder(self, tenant_id, notebook_code):
+    def create_notebook_folder(self, tenant_id, notebook_code):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
 
         if not os.path.isdir(tenant_folder):
@@ -110,8 +110,22 @@ class FileManager:
 
     def save_notebook_file(self, tenant_id: str, file):
         notebook_code = str(uuid.uuid4())
+        original_file_name = file['filename']
 
-        tenant_folder = self.__create_notebook_folder(tenant_id, notebook_code)
+        file_path = self.__save_notebook_file(tenant_id, notebook_code, file)
+
+        return {
+            'result': True,
+            'code': notebook_code,
+            'file_name': original_file_name,
+            'path': file_path
+        }
+
+    def update_notebook_file(self, tenant_id, code, file):
+        self.__save_notebook_file(tenant_id, code, file)
+
+    def __save_notebook_file(self, tenant_id, notebook_code, file):
+        tenant_folder = self.create_notebook_folder(tenant_id, notebook_code)
 
         original_file_name = file['filename']
         extension = os.path.splitext(original_file_name)[1]
@@ -125,12 +139,8 @@ class FileManager:
             output_file.write(file['body'])
 
         self.__log_debug('notebook file saved!', is_info=True)
-        return {
-            'result': True,
-            'code': notebook_code,
-            'file_name': original_file_name,
-            'path': file_path
-        }
+
+        return file_path
 
     def get_notebook_html_content(self, tenant_id, notebook_code, output_code):
         file_path = self.get_notebook_html_file_path(tenant_id, notebook_code, output_code)

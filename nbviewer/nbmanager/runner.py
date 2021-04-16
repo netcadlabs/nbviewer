@@ -8,6 +8,7 @@ from nbconvert import HTMLExporter
 import nbformat
 
 from nbviewer.nbmanager.database_instance import DatabaseInstance, DATETIME_FORMAT
+from nbviewer.nbmanager.filemanager import check_folder, FileManager
 from nbviewer.nbmanager.nb_run_error import NotebookRunError
 
 CALL_EXECUTION_TIMEOUT_ERROR_PATTERN = "Cell execution timed out"
@@ -75,10 +76,13 @@ class NotebookRunner:
         database.save_run_log(run_log)
 
     async def __run_notebook(self, notebook, output_code: str = None):
+        tenant_id = notebook['tenant_id']
         timeout = notebook['timeout']
         notebook_code = notebook['code']
         notebook_file_path = notebook['path']
         output_format = 'html'
+
+        FileManager.get_instance().create_notebook_folder(tenant_id, notebook_code)
 
         output_name = str(notebook_code) + '.' + str(output_format)
         if output_code:

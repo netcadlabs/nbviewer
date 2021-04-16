@@ -17,6 +17,8 @@ $(document).ready(function () {
 
 function showErrorDetailModal(e) {
     var detail = $(e).attr('data-error');
+    var code = $(e).attr('data-code');
+    selectedNotebookCode = code;
     $('#error-details').text(detail);
     $('#errorDetailModal').modal()
 }
@@ -47,6 +49,7 @@ function onOutputClear(){
         }).done(function () {
             console.log("delete notebook outputs success");
             $('#runDetailModal').modal('hide')
+            $('#errorDetailModal').modal('hide')
         })
         .fail(function () {
             console.error("delete notebook outputs failed");
@@ -78,7 +81,11 @@ function showRunDetailModal(e) {
                 data: "exe_date"
             },
             {
-                data: "exe_time"
+                data: "exe_time",
+                render: function (data, type, row, meta) {
+                    var exe_time = Number(data).toFixed(2)
+                    return exe_time;
+                }
             },
             {
                 data: 'code',
@@ -121,6 +128,16 @@ function showRunDetailModal(e) {
             $("#output_compare").hide()
         }
     });
+}
+
+function updateNb(code){
+    if(!code) return;
+
+    selectedNotebookCode = code;
+//    notebookControls(code, true);
+
+    $('#update_notebook_code').val(code)
+    $('#updateNotebookModal').modal();
 }
 
 function deleteNb(code) {

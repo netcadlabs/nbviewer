@@ -19,6 +19,11 @@ class NDU(HasTraits):
         help="The Tornado handler to download notebooks.",
     ).tag(config=True)
 
+    notebook_update_handler = Unicode(
+        default_value="nbviewer.ndu.handlers.notebook_update_handler.NotebookUpdateHandler",
+        help="The Tornado handler to update notebooks.",
+    ).tag(config=True)
+
     login_handler = Unicode(
         default_value="nbviewer.ndu.handlers.login_handler.LoginHandler",
         help="The Tornado handler to show login page.",
@@ -35,12 +40,14 @@ class NDU(HasTraits):
         notebooks_upload_handler = _load_handler_from_location(self.notebooks_upload_handler)
         notebooks_output_handler = _load_handler_from_location(self.notebooks_output_handler)
         notebooks_download_handler = _load_handler_from_location(self.notebooks_download_handler)
+        notebook_update_handler = _load_handler_from_location(self.notebook_update_handler)
         login_handler = _load_handler_from_location(self.login_handler)
 
         pre_providers = [
             (r"/notebooks/?(.*)", notebooks_upload_handler, {}),
             (r"/outputs/?(.*)", notebooks_output_handler, {}),
             (r"/download/?(.*)", notebooks_download_handler, {}),
+            (r"/notebook-update/?(.*)", notebook_update_handler, {}),
             (r"/login/?(.*)", login_handler, {}),
         ]
 
