@@ -23,5 +23,6 @@ venv/
 *.tar.gz
 .idea
 localfile/
+notebooks
 notebooks.db
 NETCADLABS.md
