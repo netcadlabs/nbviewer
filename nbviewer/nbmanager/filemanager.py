@@ -75,6 +75,9 @@ class FileManager:
             self.__log_debug('Creating notebooks folder : {}'.format(self.notebooks_folder), is_info=True)
             check_folder(self.notebooks_folder)
 
+        if not os.path.isdir(self.notebooks_folder):
+             self.__log_debug('Can not create notebook folder {}'.format(self.notebooks_folder), is_info=True)
+
     def create_notebook_folder(self, tenant_id, notebook_code):
         tenant_folder = path.join(self.notebooks_folder, tenant_id)
 

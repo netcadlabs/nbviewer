@@ -32,7 +32,7 @@ LABEL maintainer="Netcad Innovation Labs <netcadinnovationlabs@gmail.com>"
 # To change the number of threads use
 # docker run -d -e NBVIEWER_THREADS=4 -p 80:8080 nbviewer
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
-ENV NBVIEWER_THREADS=2 NB_DATA_FOLDER=/var/nbviewer/data CRON_USERNAME=appuser MPLCONFIGDIR=/srv/nbviewer/data
+ENV NBVIEWER_THREADS=2 NB_DATA_FOLDER=/var/nbviewer/data MPLCONFIGDIR=/var/nbviewer/data
 
 RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
@@ -45,12 +45,8 @@ COPY --from=builder /wheels /wheels
 RUN python3 -mpip install --no-cache /wheels/*
 
 WORKDIR /srv/nbviewer
-#USER nobody
 
-# Switches to a non-root user and changes the ownership of the /app folder"
-RUN mkdir -p /var/nbviewer
-RUN useradd appuser && chown -R appuser /srv/nbviewer && chown -R appuser /var/nbviewer
-USER appuser
+RUN mkdir -p /var/nbviewer && mkdir -p /var/nbviewer/data && mkdir -p /var/nbviewer/data/notebooks/
 
 EXPOSE 5000
 CMD ["python", "-m", "nbviewer", "--port=5000"]
